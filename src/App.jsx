@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from "react";
+import TermsPage from "./TermsPage.jsx";
+import PrivacyPage from "./PrivacyPage.jsx";
 
 const FREE_LIMIT = 5;
 
@@ -43,71 +45,151 @@ const parseBold = (text) => {
   );
 };
 
-// Ekran paywall
-const PaywallScreen = ({ onEnterToken }) => {
+const PLANS = [
+  { id: "solo", name: "Solo", price: "39 zł/mies.", desc: "1 użytkownik • analiza faktur • 200 wiadomości" },
+  { id: "small", name: "Mała firma", price: "89 zł/mies.", desc: "Do 5 użytkowników • wszystkie funkcje" },
+  { id: "business", name: "Firma", price: "199 zł/mies.", desc: "Do 25 użytkowników • white-label" },
+];
+
+// Modal z planami i formularzem kontaktowym
+const PricingModal = ({ onClose, onEnterToken, showTokenField }) => {
   const [token, setToken] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState("solo");
+  const [contact, setContact] = useState("");
+  const [sent, setSent] = useState(false);
+
+  const handleOrder = () => {
+    if (!contact.trim()) return;
+    setSent(true);
+  };
+
   return (
     <div style={{
-      background: "white", borderRadius: 16, padding: "28px 24px",
-      maxWidth: 420, margin: "0 auto", textAlign: "center",
-      boxShadow: "0 4px 24px rgba(99,102,241,0.12)",
-    }}>
-      <div style={{ fontSize: "2rem", marginBottom: 12 }}>🔒</div>
-      <h2 style={{ margin: "0 0 8px", fontFamily: "'Playfair Display', serif", color: "#1e1b4b", fontSize: "1.3rem" }}>
-        Wykorzystałeś 5 bezpłatnych wiadomości
-      </h2>
-      <p style={{ margin: "0 0 20px", color: "#6b7280", fontSize: "0.9rem", lineHeight: 1.6 }}>
-        Żeby kontynuować, wykup dostęp. Po opłaceniu otrzymasz kod dostępu na podany email.
-      </p>
-
-      <div style={{ background: "#f5f3ff", borderRadius: 12, padding: "16px", marginBottom: 20, textAlign: "left" }}>
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ fontWeight: 700, color: "#3730a3", fontSize: "0.9rem" }}>Solo — 39 zł/mies.</div>
-          <div style={{ color: "#6b7280", fontSize: "0.82rem" }}>1 użytkownik, analiza faktur, 200 wiadomości</div>
-        </div>
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ fontWeight: 700, color: "#3730a3", fontSize: "0.9rem" }}>Mała firma — 89 zł/mies.</div>
-          <div style={{ color: "#6b7280", fontSize: "0.82rem" }}>Do 5 użytkowników, wszystkie funkcje</div>
-        </div>
-        <div>
-          <div style={{ fontWeight: 700, color: "#3730a3", fontSize: "0.9rem" }}>Firma — 199 zł/mies.</div>
-          <div style={{ color: "#6b7280", fontSize: "0.82rem" }}>Do 25 użytkowników, white-label</div>
-        </div>
-      </div>
-
+      position: "fixed", inset: 0, background: "rgba(30,27,75,0.5)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      zIndex: 100, padding: 16,
+    }} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={{
-        background: "#f0fdf4", border: "1.5px solid #bbf7d0", borderRadius: 12,
-        padding: "14px 16px", marginBottom: 16, textAlign: "left",
+        background: "white", borderRadius: 20, padding: "28px 24px",
+        width: "100%", maxWidth: 420, maxHeight: "90vh", overflowY: "auto",
+        boxShadow: "0 20px 60px rgba(99,102,241,0.25)",
+        animation: "fadeIn 0.2s ease",
       }}>
-        <p style={{ margin: "0 0 4px", fontWeight: 700, color: "#166534", fontSize: "0.88rem" }}>Jak zamówić dostęp?</p>
-        <p style={{ margin: 0, color: "#166534", fontSize: "0.82rem", lineHeight: 1.6 }}>
-          Napisz na <strong>twoj@email.pl</strong> z wybranym planem. Po opłaceniu otrzymasz kod dostępu w ciągu 24 godzin.
-        </p>
-      </div>
-
-      <div style={{ borderTop: "1px solid #e0e7ff", paddingTop: 16 }}>
-        <p style={{ margin: "0 0 8px", fontSize: "0.82rem", color: "#6b7280" }}>Masz już kod dostępu?</p>
-        <div style={{ display: "flex", gap: 8 }}>
-          <input
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            placeholder="Wpisz kod"
-            style={{
-              flex: 1, padding: "8px 12px", borderRadius: 10, border: "1.5px solid #e0e7ff",
-              fontSize: "0.88rem", fontFamily: "inherit", outline: "none",
-            }}
-          />
-          <button
-            onClick={() => token.trim() && onEnterToken(token.trim())}
-            style={{
-              background: "#4f46e5", color: "white", border: "none",
-              borderRadius: 10, padding: "8px 16px", cursor: "pointer",
-              fontSize: "0.88rem", fontWeight: 600,
-            }}
-          >
-            Wejdź
-          </button>
+        {/* Nagłówek */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+          <h2 style={{ margin: 0, fontFamily: "'Playfair Display', serif", color: "#1e1b4b", fontSize: "1.3rem" }}>
+            Wybierz plan
+          </h2>
+          <button onClick={onClose} style={{
+            background: "none", border: "none", cursor: "pointer",
+            color: "#9ca3af", fontSize: "1.3rem", padding: "0 4px", lineHeight: 1,
+          }}>✕</button>
         </div>
+
+        {!sent ? (
+          <>
+            {/* Plany */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+              {PLANS.map(plan => (
+                <div
+                  key={plan.id}
+                  onClick={() => setSelectedPlan(plan.id)}
+                  style={{
+                    border: selectedPlan === plan.id ? "2px solid #4f46e5" : "2px solid #e0e7ff",
+                    borderRadius: 12, padding: "12px 16px", cursor: "pointer",
+                    background: selectedPlan === plan.id ? "#f5f3ff" : "white",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ fontWeight: 700, color: "#1e1b4b", fontSize: "0.95rem" }}>{plan.name}</div>
+                    <div style={{ fontWeight: 700, color: "#4f46e5", fontSize: "0.95rem" }}>{plan.price}</div>
+                  </div>
+                  <div style={{ color: "#6b7280", fontSize: "0.8rem", marginTop: 3 }}>{plan.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Formularz */}
+            <p style={{ margin: "0 0 10px", fontSize: "0.85rem", color: "#374151", fontWeight: 600 }}>
+              Twój email lub numer telefonu
+            </p>
+            <input
+              value={contact}
+              onChange={(e) => setContact(e.target.value)}
+              placeholder="np. jan@firma.pl lub 600 123 456"
+              style={{
+                width: "100%", padding: "10px 14px", borderRadius: 10,
+                border: "1.5px solid #e0e7ff", fontSize: "0.88rem",
+                fontFamily: "inherit", marginBottom: 12,
+              }}
+            />
+            <button
+              onClick={handleOrder}
+              disabled={!contact.trim()}
+              style={{
+                width: "100%", background: contact.trim() ? "#4f46e5" : "#c7d2fe",
+                color: "white", border: "none", borderRadius: 12, padding: "12px",
+                fontWeight: 700, fontSize: "0.95rem", cursor: contact.trim() ? "pointer" : "not-allowed",
+                marginBottom: 16,
+              }}
+            >
+              Zamawiam plan {PLANS.find(p => p.id === selectedPlan)?.name}
+            </button>
+
+            <p style={{ margin: "0 0 16px", fontSize: "0.75rem", color: "#9ca3af", textAlign: "center", lineHeight: 1.5 }}>
+              Skontaktujemy się w ciągu 24h z potwierdzeniem i instrukcją płatności. Bez zobowiązań.
+            </p>
+
+            {/* Już masz kod */}
+            {showTokenField && (
+              <div style={{ borderTop: "1px solid #e0e7ff", paddingTop: 16 }}>
+                <p style={{ margin: "0 0 8px", fontSize: "0.82rem", color: "#6b7280", textAlign: "center" }}>
+                  Masz już kod dostępu?
+                </p>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    value={token}
+                    onChange={(e) => setToken(e.target.value)}
+                    placeholder="Wpisz kod"
+                    style={{
+                      flex: 1, padding: "8px 12px", borderRadius: 10,
+                      border: "1.5px solid #e0e7ff", fontSize: "0.88rem", fontFamily: "inherit",
+                    }}
+                  />
+                  <button
+                    onClick={() => token.trim() && onEnterToken(token.trim())}
+                    style={{
+                      background: "#4f46e5", color: "white", border: "none",
+                      borderRadius: 10, padding: "8px 16px", cursor: "pointer",
+                      fontSize: "0.88rem", fontWeight: 600,
+                    }}
+                  >
+                    Wejdź
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          /* Potwierdzenie */
+          <div style={{ textAlign: "center", padding: "16px 0" }}>
+            <div style={{ fontSize: "2.5rem", marginBottom: 12 }}>✅</div>
+            <h3 style={{ margin: "0 0 8px", fontFamily: "'Playfair Display', serif", color: "#1e1b4b" }}>
+              Zamówienie przyjęte
+            </h3>
+            <p style={{ color: "#6b7280", fontSize: "0.88rem", lineHeight: 1.6, margin: "0 0 20px" }}>
+              Odezwiemy się na <strong>{contact}</strong> w ciągu 24 godzin z potwierdzeniem i instrukcją płatności.
+            </p>
+            <button onClick={onClose} style={{
+              background: "#4f46e5", color: "white", border: "none",
+              borderRadius: 12, padding: "10px 24px", cursor: "pointer",
+              fontWeight: 600, fontSize: "0.9rem",
+            }}>
+              Wróć do asystenta
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -116,22 +198,33 @@ const PaywallScreen = ({ onEnterToken }) => {
 export default function KSeFAsystent() {
   const [messages, setMessages] = useState([{
     role: "assistant",
-    content: "Cześć. Jestem asystentem KSeF — stworzył mnie psycholog, który widział ile stresu ten system powoduje i pomyślał że da się inaczej.\n\nMożesz zapytać o terminy, błędy, uprawnienia, integracje. Masz 5 bezpłatnych wiadomości na start. Co Cię sprowadza?",
+    content: "Cześć. Jestem asystentem KSeF — pomagam ogarnąć e-faktury i przepisy bez bólu głowy.\n\nMożesz zapytać o terminy, błędy, uprawnienia, integracje. Masz 5 bezpłatnych wiadomości na start.\n\nKażda sesja jest niezależna — nie zapamiętuje poprzednich rozmów. Co Cię sprowadza?",
   }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showPricing, setShowPricing] = useState(false);
+  const [page, setPage] = useState("chat"); // "chat" | "terms" | "privacy"
   const [userToken, setUserToken] = useState(null);
-  const [image, setImage] = useState(null); // { base64, mediaType }
+  const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const paywallRef = useRef(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  useEffect(() => {
+    if (showPaywall && paywallRef.current) {
+      setTimeout(() => {
+        paywallRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+    }
+  }, [showPaywall]);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -146,12 +239,31 @@ export default function KSeFAsystent() {
       return;
     }
 
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"];
+    if (!allowedTypes.includes(file.type)) {
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: "Obsługiwane formaty: JPG, PNG, WebP, PDF. Wyślij fakturę w jednym z tych formatów.",
+      }]);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: "Plik jest za duży. Maksymalny rozmiar to 5 MB.",
+      }]);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (ev) => {
       const base64 = ev.target.result.split(",")[1];
       const mediaType = file.type;
-      setImage({ base64, mediaType });
-      setImagePreview(ev.target.result);
+      setImage({ base64, mediaType, isPdf: file.type === "application/pdf", fileName: file.name });
+      setImagePreview(file.type === "application/pdf" ? null : ev.target.result);
     };
     reader.readAsDataURL(file);
   };
@@ -167,7 +279,7 @@ export default function KSeFAsystent() {
     if ((!userText && !image) || loading) return;
 
     if (!userToken && messageCount >= FREE_LIMIT) {
-      setShowPaywall(true);
+      setShowPricing(true);
       return;
     }
 
@@ -176,13 +288,16 @@ export default function KSeFAsystent() {
     // Zwiększ licznik od razu przy wysyłce (nie czekaj na odpowiedź)
     if (!userToken) setMessageCount(c => c + 1);
 
-    // Zbuduj wiadomość — z obrazem lub bez
+    // Zbuduj wiadomość — z obrazem, PDF lub bez
     let userMessage;
     if (image) {
+      const contentBlock = image.isPdf
+        ? { type: "document", source: { type: "base64", media_type: "application/pdf", data: image.base64 } }
+        : { type: "image", source: { type: "base64", media_type: image.mediaType, data: image.base64 } };
       userMessage = {
         role: "user",
         content: [
-          { type: "image", source: { type: "base64", media_type: image.mediaType, data: image.base64 } },
+          contentBlock,
           { type: "text", text: userText || "Sprawdź tę fakturę i powiedz czy jest poprawna pod kątem KSeF." },
         ],
       };
@@ -220,7 +335,7 @@ export default function KSeFAsystent() {
 
       if (response.status === 403) {
         if (data.error === "limit_reached") {
-          setShowPaywall(true);
+          setShowPricing(true);
         } else if (data.error === "upgrade_required") {
           setMessages(prev => [...prev, { role: "assistant", content: "Analiza faktur dostępna jest w płatnych planach. Wykup dostęp żeby z niej korzystać." }]);
           setShowPaywall(true);
@@ -254,6 +369,7 @@ export default function KSeFAsystent() {
   const handleEnterToken = (token) => {
     setUserToken(token);
     setShowPaywall(false);
+    setShowPricing(false);
     setMessages(prev => [...prev, {
       role: "assistant",
       content: "Kod przyjęty — masz pełny dostęp. Możesz teraz wysyłać zdjęcia faktur i rozmawiać bez limitu. Czym mogę pomóc?",
@@ -262,6 +378,9 @@ export default function KSeFAsystent() {
 
   const isPaid = !!userToken;
   const remainingFree = Math.max(0, FREE_LIMIT - messageCount);
+
+  if (page === "terms") return <TermsPage onBack={() => setPage("chat")} />;
+  if (page === "privacy") return <PrivacyPage onBack={() => setPage("chat")} />;
 
   return (
     <div style={{
@@ -292,13 +411,37 @@ export default function KSeFAsystent() {
         }
       `}</style>
 
+      {/* Modal z cenami */}
+      {showPricing && (
+        <PricingModal
+          onClose={() => setShowPricing(false)}
+          onEnterToken={handleEnterToken}
+          showTokenField={true}
+        />
+      )}
+
       {/* Header */}
       <div style={{
         width: "100%", background: "linear-gradient(135deg, #3730a3, #4f46e5, #6366f1)",
-        padding: "24px 20px 20px", textAlign: "center",
+        padding: "20px 20px 16px", textAlign: "center",
         position: "sticky", top: 0, zIndex: 10,
         boxShadow: "0 4px 20px rgba(79,70,229,0.25)",
       }}>
+        {/* Przycisk cennika w prawym górnym rogu */}
+        {!isPaid && (
+          <button
+            onClick={() => setShowPricing(true)}
+            style={{
+              position: "absolute", top: 14, right: 16,
+              background: "rgba(255,255,255,0.2)", border: "1.5px solid rgba(255,255,255,0.4)",
+              borderRadius: 20, padding: "6px 14px", color: "white",
+              fontSize: "0.78rem", fontWeight: 600, cursor: "pointer",
+              fontFamily: "inherit", transition: "background 0.15s",
+            }}
+          >
+            Kup dostęp
+          </button>
+        )}
         <div style={{ fontSize: "2rem", marginBottom: 4 }}>📄</div>
         <h1 style={{
           margin: 0, fontFamily: "'Playfair Display', serif",
@@ -405,13 +548,17 @@ export default function KSeFAsystent() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Paywall — zawsze pod wiadomościami */}
+      {/* Paywall — pod wiadomościami, scrolluje do środka */}
       {showPaywall && (
-        <div style={{
+        <div ref={paywallRef} style={{
           maxWidth: 680, width: "calc(100% - 32px)", margin: "16px 16px 0",
           animation: "fadeIn 0.3s ease",
         }}>
-          <PaywallScreen onEnterToken={handleEnterToken} />
+          <PricingModal
+            onClose={() => setShowPaywall(false)}
+            onEnterToken={handleEnterToken}
+            showTokenField={true}
+          />
         </div>
       )}
 
@@ -421,14 +568,23 @@ export default function KSeFAsystent() {
           position: "sticky", bottom: 16,
         }}>
           {/* Podgląd obrazu */}
-          {imagePreview && (
+          {(imagePreview || (image?.isPdf)) && (
             <div style={{
               background: "white", borderRadius: "12px 12px 0 0", padding: "8px 12px",
               display: "flex", alignItems: "center", gap: 10,
               border: "1.5px solid #e0e7ff", borderBottom: "none",
             }}>
-              <img src={imagePreview} alt="podgląd" style={{ height: 48, borderRadius: 6, objectFit: "cover" }} />
-              <span style={{ fontSize: "0.82rem", color: "#6b7280", flex: 1 }}>Faktura gotowa do analizy</span>
+              {image?.isPdf
+                ? <div style={{
+                    width: 48, height: 48, borderRadius: 6, background: "#fee2e2",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "1.4rem", flexShrink: 0,
+                  }}>📄</div>
+                : <img src={imagePreview} alt="podgląd" style={{ height: 48, borderRadius: 6, objectFit: "cover" }} />
+              }
+              <span style={{ fontSize: "0.82rem", color: "#6b7280", flex: 1 }}>
+                {image?.isPdf ? image.fileName : "Faktura gotowa do analizy"}
+              </span>
               <button onClick={removeImage} style={{
                 background: "none", border: "none", cursor: "pointer",
                 color: "#9ca3af", fontSize: "1.1rem", padding: 4,
@@ -438,7 +594,7 @@ export default function KSeFAsystent() {
 
           <div style={{
             background: "white",
-            borderRadius: imagePreview ? "0 0 20px 20px" : 20,
+            borderRadius: (imagePreview || image?.isPdf) ? "0 0 20px 20px" : 20,
             padding: "8px 8px 8px 16px",
             display: "flex", alignItems: "flex-end", gap: 8,
             boxShadow: "0 4px 24px rgba(99,102,241,0.15)",
@@ -448,7 +604,7 @@ export default function KSeFAsystent() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*,.pdf"
+              accept="image/jpeg,image/png,image/webp,application/pdf"
               style={{ display: "none" }}
               onChange={handleImageUpload}
             />
@@ -503,6 +659,17 @@ export default function KSeFAsystent() {
           </div>
           <p style={{ textAlign: "center", margin: "8px 0 0", fontSize: "0.72rem", color: "#a5b4fc" }}>
             Asystent AI — nie zastępuje doradcy podatkowego. Dane przesyłane są przez Anthropic API i nie są przez nas przechowywane.
+          </p>
+          <p style={{ textAlign: "center", margin: "6px 0 0", fontSize: "0.72rem" }}>
+            <button onClick={() => setPage("terms")} style={{
+              background: "none", border: "none", color: "#a5b4fc", cursor: "pointer",
+              fontSize: "0.72rem", fontFamily: "inherit", textDecoration: "underline", padding: 0,
+            }}>Regulamin</button>
+            <span style={{ color: "#c7d2fe", margin: "0 6px" }}>•</span>
+            <button onClick={() => setPage("privacy")} style={{
+              background: "none", border: "none", color: "#a5b4fc", cursor: "pointer",
+              fontSize: "0.72rem", fontFamily: "inherit", textDecoration: "underline", padding: 0,
+            }}>Polityka prywatności</button>
           </p>
         </div>
     </div>

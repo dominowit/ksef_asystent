@@ -141,9 +141,9 @@ export default function KSeFAsystent() {
     if (!userToken) {
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: "Analiza faktur dostępna jest w płatnych planach. Wpisz kod dostępu lub zamów dostęp poniżej.",
+        content: "Analiza faktur dostępna jest w płatnych planach. Wykup dostęp żeby z niej korzystać.",
       }]);
-      setShowPaywall(true);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
@@ -173,6 +173,9 @@ export default function KSeFAsystent() {
     }
 
     setInput("");
+
+    // Zwiększ licznik od razu przy wysyłce (nie czekaj na odpowiedź)
+    if (!userToken) setMessageCount(c => c + 1);
 
     // Zbuduj wiadomość — z obrazem lub bez
     let userMessage;
@@ -236,7 +239,6 @@ export default function KSeFAsystent() {
       }
 
       setMessages(prev => [...prev, { role: "assistant", content: data.reply }]);
-      if (!userToken) setMessageCount(c => c + 1);
 
     } catch {
       setMessages(prev => [...prev, { role: "assistant", content: "Problem z połączeniem. Sprawdź internet i spróbuj ponownie." }]);
@@ -326,10 +328,10 @@ export default function KSeFAsystent() {
         )}
       </div>
 
-      {/* Paywall */}
+      {/* Paywall — pod wiadomościami, nie zamiast czatu */}
       {showPaywall && (
         <div style={{
-          maxWidth: 680, width: "calc(100% - 32px)", margin: "24px 16px 0",
+          maxWidth: 680, width: "calc(100% - 32px)", margin: "16px 16px 0",
           animation: "fadeIn 0.3s ease",
         }}>
           <PaywallScreen onEnterToken={handleEnterToken} />
@@ -414,9 +416,8 @@ export default function KSeFAsystent() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      {!showPaywall && (
-        <div style={{
+      {/* Input — zawsze widoczny */}
+      <div style={{
           maxWidth: 680, width: "calc(100% - 32px)", margin: "16px 16px 0",
           position: "sticky", bottom: 16,
         }}>
@@ -505,7 +506,6 @@ export default function KSeFAsystent() {
             Asystent AI — nie zastępuje doradcy podatkowego. Dane przesyłane są przez Anthropic API i nie są przez nas przechowywane.
           </p>
         </div>
-      )}
     </div>
   );
 }

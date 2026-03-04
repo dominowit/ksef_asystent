@@ -75,16 +75,15 @@ const PaywallScreen = ({ onEnterToken }) => {
         </div>
       </div>
 
-      <a
-        href="mailto:twoj@email.pl?subject=KSeF Asystent — zamówienie dostępu"
-        style={{
-          display: "block", background: "#4f46e5", color: "white",
-          padding: "12px", borderRadius: 12, textDecoration: "none",
-          fontWeight: 600, fontSize: "0.9rem", marginBottom: 16,
-        }}
-      >
-        Zamów dostęp
-      </a>
+      <div style={{
+        background: "#f0fdf4", border: "1.5px solid #bbf7d0", borderRadius: 12,
+        padding: "14px 16px", marginBottom: 16, textAlign: "left",
+      }}>
+        <p style={{ margin: "0 0 4px", fontWeight: 700, color: "#166534", fontSize: "0.88rem" }}>Jak zamówić dostęp?</p>
+        <p style={{ margin: 0, color: "#166534", fontSize: "0.82rem", lineHeight: 1.6 }}>
+          Napisz na <strong>twoj@email.pl</strong> z wybranym planem. Po opłaceniu otrzymasz kod dostępu w ciągu 24 godzin.
+        </p>
+      </div>
 
       <div style={{ borderTop: "1px solid #e0e7ff", paddingTop: 16 }}>
         <p style={{ margin: "0 0 8px", fontSize: "0.82rem", color: "#6b7280" }}>Masz już kod dostępu?</p>
@@ -328,16 +327,6 @@ export default function KSeFAsystent() {
         )}
       </div>
 
-      {/* Paywall — pod wiadomościami, nie zamiast czatu */}
-      {showPaywall && (
-        <div style={{
-          maxWidth: 680, width: "calc(100% - 32px)", margin: "16px 16px 0",
-          animation: "fadeIn 0.3s ease",
-        }}>
-          <PaywallScreen onEnterToken={handleEnterToken} />
-        </div>
-      )}
-
       {/* Quick questions */}
       {messages.length <= 1 && !showPaywall && (
         <div style={{
@@ -415,6 +404,16 @@ export default function KSeFAsystent() {
         )}
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Paywall — zawsze pod wiadomościami */}
+      {showPaywall && (
+        <div style={{
+          maxWidth: 680, width: "calc(100% - 32px)", margin: "16px 16px 0",
+          animation: "fadeIn 0.3s ease",
+        }}>
+          <PaywallScreen onEnterToken={handleEnterToken} />
+        </div>
+      )}
 
       {/* Input — zawsze widoczny */}
       <div style={{

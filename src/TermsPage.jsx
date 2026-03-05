@@ -39,7 +39,7 @@ export default function TermsPage({ onBack }) {
 
         <h3 style={{ color: "#3730a3" }}>§ 1. Postanowienia ogólne</h3>
         <ol>
-          <li>Usługodawcą jest <strong>Dominik Witkowski</strong>, zamieszkały w <strong>przy ul. Wawrzyczka 50, 10-762 w Olsztynie</strong>, prowadzący działalność nierejestrowaną zgodnie z art. 5 ustawy Prawo przedsiębiorców. Kontakt: <strong>dominowit@gmail.com</strong>.</li>
+          <li>Usługodawcą jest <strong>Dominik Witkowski</strong>, zamieszkały przy ul. <strong>Wawrzyczka 50, 10-762 Olsztyn</strong>, prowadzący działalność nierejestrowaną zgodnie z art. 5 ustawy Prawo przedsiębiorców. Kontakt: <strong>dominowit@gmail.com</strong>.</li>
           <li>Usługa „Asystent KSeF" jest narzędziem informacyjnym w formie czatu online, wspomaganym przez modele sztucznej inteligencji (AI).</li>
           <li>Usługodawca oświadcza, że nie jest doradcą podatkowym, księgowym ani prawnym. Treści generowane przez Asystenta mają charakter wyłącznie informacyjny i edukacyjny.</li>
         </ol>
@@ -49,7 +49,7 @@ export default function TermsPage({ onBack }) {
           <li>Korzystanie z Usługi wymaga opłacenia subskrypcji za pośrednictwem systemu Stripe.</li>
           <li>Po dokonaniu płatności w ramach wybranego planu (Solo, Mała firma lub Firma) Klient otrzymuje unikalny kod dostępu na podany adres e-mail.</li>
           <li>Plany płatne umożliwiają analizę plików w formatach JPG, PNG, WebP oraz PDF (maksymalna wielkość pliku to 5 MB).</li>
-          <li>Zakazuje się udostępniania kodu osobom trzecim spoza organizacji Klienta. Limity użytkowników: Mała firma (do 5 osób), Firma (do 25 osób).</li>
+          <li>Zakazuje się udostępniania kodu osobom trzecim spoza organizacji Klienta. Limity użytkowników: Solo (1 osoba, 200 wiadomości/mies.), Mała firma (do 5 osób, 600 wiadomości/mies.), Firma (do 25 osób, 2000 wiadomości/mies.).</li>
           <li>Usługa nie łączy się z systemem Ministerstwa Finansów i nie służy do bezpośredniego wystawiania e-faktur w rozumieniu prawnym.</li>
         </ol>
 

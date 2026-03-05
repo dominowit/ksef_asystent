@@ -128,7 +128,7 @@ const PricingModal = ({ onClose, onEnterToken, showTokenField }) => {
             </a>
 
             <p style={{ margin: "0 0 16px", fontSize: "0.75rem", color: "#9ca3af", textAlign: "center", lineHeight: 1.5 }}>
-              Skontaktujemy się w ciągu 24h z potwierdzeniem i instrukcją płatności. Bez zobowiązań.
+              Zostaniesz przekierowany na stronę płatności Stripe. Kod dostępu otrzymasz emailem po opłaceniu.
             </p>
 
             {/* Już masz kod */}

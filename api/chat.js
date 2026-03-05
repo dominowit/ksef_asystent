@@ -2,6 +2,11 @@
 // Chroni klucz API, liczy wiadomości, obsługuje plany freemium/płatne
 
 const FREE_MESSAGE_LIMIT = 5;
+const PLAN_LIMITS = {
+  solo: 200,
+  small: 600,
+  business: 2000,
+};
 
 // Prosta baza planów — w przyszłości zastąp prawdziwą bazą danych
 // klucz: token użytkownika, wartość: plan ("free", "solo", "small", "business")
@@ -164,6 +169,14 @@ export default async function handler(req, res) {
     return res.status(403).json({
       error: "limit_reached",
       message: "Wykorzystałeś bezpłatne 5 wiadomości. Wykup dostęp żeby kontynuować.",
+    });
+  }
+
+  // Płatne plany: sprawdź limit wiadomości
+  if (isPaid && plan in PLAN_LIMITS && messageCount >= PLAN_LIMITS[plan]) {
+    return res.status(403).json({
+      error: "plan_limit_reached",
+      message: `Wykorzystałeś limit wiadomości w planie ${plan}. Skontaktuj się z nami żeby przejść na wyższy plan.`,
     });
   }
 

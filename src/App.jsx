@@ -46,17 +46,21 @@ const parseBold = (text) => {
 };
 
 const PLANS = [
-  { id: "solo", name: "Solo", price: "39 zł/mies.", desc: "1 użytkownik • analiza faktur • 200 wiadomości" },
-  { id: "small", name: "Mała firma", price: "89 zł/mies.", desc: "Do 5 użytkowników • wszystkie funkcje" },
-  { id: "business", name: "Firma", price: "199 zł/mies.", desc: "Do 25 użytkowników • white-label" },
+  { id: "solo", name: "Solo", price: "39 zł/mies.",
+    desc: "1 użytkownik • analiza faktur • 200 wiadomości/mies.",
+    link: "https://buy.stripe.com/cNi4gzcobg0R38C64Ocwg00" },
+  { id: "small", name: "Mała firma", price: "89 zł/mies.",
+    desc: "Do 5 użytkowników • analiza faktur • 600 wiadomości/mies.",
+    link: "https://buy.stripe.com/9B600j2NB7ul6kO8cWcwg01" },
+  { id: "business", name: "Firma", price: "199 zł/mies.",
+    desc: "Do 25 użytkowników • analiza faktur • 2000 wiadomości/mies. • priorytetowe wsparcie",
+    link: "https://buy.stripe.com/14AfZh3RFbKBaB41Oycwg02" },
 ];
 
 // Modal z planami i formularzem kontaktowym
 const PricingModal = ({ onClose, onEnterToken, showTokenField }) => {
   const [token, setToken] = useState("");
   const [selectedPlan, setSelectedPlan] = useState("solo");
-  const [contact, setContact] = useState("");
-  const [sent, setSent] = useState(false);
 
   const handleOrder = () => {
     if (!contact.trim()) return;
@@ -86,9 +90,7 @@ const PricingModal = ({ onClose, onEnterToken, showTokenField }) => {
           }}>✕</button>
         </div>
 
-        {!sent ? (
-          <>
-            {/* Plany */}
+        {/* Plany */}
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
               {PLANS.map(plan => (
                 <div
@@ -111,31 +113,19 @@ const PricingModal = ({ onClose, onEnterToken, showTokenField }) => {
             </div>
 
             {/* Formularz */}
-            <p style={{ margin: "0 0 10px", fontSize: "0.85rem", color: "#374151", fontWeight: 600 }}>
-              Twój email lub numer telefonu
-            </p>
-            <input
-              value={contact}
-              onChange={(e) => setContact(e.target.value)}
-              placeholder="np. jan@firma.pl lub 600 123 456"
+            <a
+              href={PLANS.find(p => p.id === selectedPlan)?.link}
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
-                width: "100%", padding: "10px 14px", borderRadius: 10,
-                border: "1.5px solid #e0e7ff", fontSize: "0.88rem",
-                fontFamily: "inherit", marginBottom: 12,
-              }}
-            />
-            <button
-              onClick={handleOrder}
-              disabled={!contact.trim()}
-              style={{
-                width: "100%", background: contact.trim() ? "#4f46e5" : "#c7d2fe",
-                color: "white", border: "none", borderRadius: 12, padding: "12px",
-                fontWeight: 700, fontSize: "0.95rem", cursor: contact.trim() ? "pointer" : "not-allowed",
-                marginBottom: 16,
+                display: "block", width: "100%", background: "#4f46e5",
+                color: "white", borderRadius: 12, padding: "12px",
+                fontWeight: 700, fontSize: "0.95rem", textAlign: "center",
+                textDecoration: "none", marginBottom: 16,
               }}
             >
-              Zamawiam plan {PLANS.find(p => p.id === selectedPlan)?.name}
-            </button>
+              Zapłać — {PLANS.find(p => p.id === selectedPlan)?.price}
+            </a>
 
             <p style={{ margin: "0 0 16px", fontSize: "0.75rem", color: "#9ca3af", textAlign: "center", lineHeight: 1.5 }}>
               Skontaktujemy się w ciągu 24h z potwierdzeniem i instrukcją płatności. Bez zobowiązań.
@@ -170,26 +160,8 @@ const PricingModal = ({ onClose, onEnterToken, showTokenField }) => {
                 </div>
               </div>
             )}
-          </>
-        ) : (
-          /* Potwierdzenie */
-          <div style={{ textAlign: "center", padding: "16px 0" }}>
-            <div style={{ fontSize: "2.5rem", marginBottom: 12 }}>✅</div>
-            <h3 style={{ margin: "0 0 8px", fontFamily: "'Playfair Display', serif", color: "#1e1b4b" }}>
-              Zamówienie przyjęte
-            </h3>
-            <p style={{ color: "#6b7280", fontSize: "0.88rem", lineHeight: 1.6, margin: "0 0 20px" }}>
-              Odezwiemy się na <strong>{contact}</strong> w ciągu 24 godzin z potwierdzeniem i instrukcją płatności.
-            </p>
-            <button onClick={onClose} style={{
-              background: "#4f46e5", color: "white", border: "none",
-              borderRadius: 12, padding: "10px 24px", cursor: "pointer",
-              fontWeight: 600, fontSize: "0.9rem",
-            }}>
-              Wróć do asystenta
-            </button>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

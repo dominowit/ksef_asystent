@@ -42,21 +42,6 @@ const formatMessage = (text) => {
 };
 
 
-const formatOnboarding = (text, onTermsClick) => {
-  return text.split("\n").map((line, i) => {
-    if (line.trim() === "") return <div key={i} style={{ height: 6 }} />;
-    if (line.includes("Regulamin")) {
-      const parts = line.split("Regulamin");
-      return <p key={i} style={{ margin: "3px 0", lineHeight: 1.65 }}>
-        {parts[0]}
-        <button onClick={onTermsClick} style={{ background: "none", border: "none", color: "#4f46e5", cursor: "pointer", textDecoration: "underline", padding: 0, fontFamily: "inherit", fontSize: "inherit" }}>Regulamin</button>
-        {parts[1]}
-      </p>;
-    }
-    return <p key={i} style={{ margin: "3px 0", lineHeight: 1.65 }}>{parseBold(line)}</p>;
-  });
-};
-
 const PLANS = [
   { id: "solo", name: "Solo", price: "39 zł/mies.", desc: "1 użytkownik • analiza faktur • 200 wiadomości/mies.", link: "https://buy.stripe.com/cNi4gzcobg0R38C64Ocwg00" },
   { id: "small", name: "Mała firma", price: "89 zł/mies.", desc: "Do 5 użytkowników • analiza faktur • 600 wiadomości/mies.", link: "https://buy.stripe.com/9B600j2NB7ul6kO8cWcwg01" },

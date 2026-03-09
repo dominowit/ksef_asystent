@@ -41,6 +41,22 @@ const formatMessage = (text) => {
   });
 };
 
+
+const formatOnboarding = (text, onTermsClick) => {
+  return text.split("\n").map((line, i) => {
+    if (line.trim() === "") return <div key={i} style={{ height: 6 }} />;
+    if (line.includes("Regulamin")) {
+      const parts = line.split("Regulamin");
+      return <p key={i} style={{ margin: "3px 0", lineHeight: 1.65 }}>
+        {parts[0]}
+        <button onClick={onTermsClick} style={{ background: "none", border: "none", color: "#4f46e5", cursor: "pointer", textDecoration: "underline", padding: 0, fontFamily: "inherit", fontSize: "inherit" }}>Regulamin</button>
+        {parts[1]}
+      </p>;
+    }
+    return <p key={i} style={{ margin: "3px 0", lineHeight: 1.65 }}>{parseBold(line)}</p>;
+  });
+};
+
 const PLANS = [
   { id: "solo", name: "Solo", price: "39 zł/mies.", desc: "1 użytkownik • analiza faktur • 200 wiadomości/mies.", link: "https://buy.stripe.com/cNi4gzcobg0R38C64Ocwg00" },
   { id: "small", name: "Mała firma", price: "89 zł/mies.", desc: "Do 5 użytkowników • analiza faktur • 600 wiadomości/mies.", link: "https://buy.stripe.com/9B600j2NB7ul6kO8cWcwg01" },
@@ -88,13 +104,45 @@ const PricingModal = ({ onClose, onEnterToken, showTokenField }) => {
   );
 };
 
+
+const SafetyModal = ({ onClose }) => (
+  <div style={{ position: "fixed", inset: 0, background: "rgba(30,27,75,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 }} onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div style={{ background: "white", borderRadius: 20, padding: "28px 24px", width: "100%", maxWidth: 460, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(99,102,241,0.25)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+        <h2 style={{ margin: 0, fontFamily: "\'Playfair Display\', serif", color: "#1e1b4b", fontSize: "1.2rem" }}>🛡️ Jak korzystać bezpiecznie?</h2>
+        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: "1.3rem", padding: "0 4px" }}>✕</button>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14, fontSize: "0.88rem", color: "#374151", lineHeight: 1.7 }}>
+        <div style={{ background: "#f5f3ff", borderRadius: 12, padding: "12px 14px" }}>
+          <strong style={{ color: "#3730a3" }}>1. Chroń dane osobowe</strong>
+          <p style={{ margin: "4px 0 0" }}>Przed wklejeniem treści błędu lub fragmentu faktury usuń dane wrażliwe: imiona, nazwiska, numery telefonów, prywatne adresy e-mail. NIP-y firmowe są bezpieczne — dane osób fizycznych wymagają anonimizacji.</p>
+        </div>
+        <div style={{ background: "#f5f3ff", borderRadius: 12, padding: "12px 14px" }}>
+          <strong style={{ color: "#3730a3" }}>2. Weryfikuj odpowiedzi</strong>
+          <p style={{ margin: "4px 0 0" }}>Jestem sztuczną inteligencją. Choć znam przepisy i schematy KSeF, zawsze potwierdzaj kluczowe decyzje finansowe z księgowością lub doradcą podatkowym. Nie zastępuję oficjalnej porady prawnej.</p>
+        </div>
+        <div style={{ background: "#f5f3ff", borderRadius: 12, padding: "12px 14px" }}>
+          <strong style={{ color: "#3730a3" }}>3. To nie terapia</strong>
+          <p style={{ margin: "4px 0 0" }}>Chętnie wysłucham i pomogę się uspokoić — ale w przypadku poważnego kryzysu emocjonalnego skorzystaj z pomocy specjalisty.</p>
+        </div>
+        <div style={{ background: "#fee2e2", borderRadius: 12, padding: "12px 14px" }}>
+          <strong style={{ color: "#991b1b" }}>4. Nigdy nie podawaj haseł ani tokenów</strong>
+          <p style={{ margin: "4px 0 0" }}>Nie podawaj mi haseł ani pełnych tokenów autoryzacyjnych do bramki Ministerstwa Finansów. Żadne legitne narzędzie nigdy o to nie prosi.</p>
+        </div>
+      </div>
+      <button onClick={onClose} style={{ marginTop: 20, width: "100%", background: "#4f46e5", color: "white", border: "none", borderRadius: 12, padding: "11px", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", fontFamily: "inherit" }}>Rozumiem, zaczynamy!</button>
+    </div>
+  </div>
+);
+
 export default function KSeFAsystent() {
-  const [messages, setMessages] = useState([{ role: "assistant", content: "Cześć. Jestem asystentem KSeF — pomagam ogarnąć e-faktury i przepisy bez bólu głowy.\n\nMożesz zapytać o terminy, błędy, uprawnienia, integracje. Masz 5 bezpłatnych wiadomości na start.\n\nKażda sesja jest niezależna — nie zapamiętuje poprzednich rozmów. Co Cię sprowadza?" }]);
+  const [messages, setMessages] = useState([{ role: "assistant", content: "Cześć! Pomogę Ci z KSeF i stresem z nim związanym.\n\nZanim zaczniemy — ważna informacja: nie jestem doradcą podatkowym, terapeutą ani lekarzem. Moje odpowiedzi to ogólna wiedza, nie oficjalna porada prawna. Korzystając z tego asystenta, akceptujesz Regulamin.\n\nMożesz zapytać o terminy, błędy, uprawnienia, integracje — masz 5 bezpłatnych wiadomości na start. Każda sesja jest niezależna. Co Cię sprowadza?", isOnboarding: true }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
   const [showPaywall, setShowPaywall] = useState(false);
   const [showPricing, setShowPricing] = useState(false);
+  const [showSafety, setShowSafety] = useState(false);
   const [page, setPage] = useState("chat");
   const [userToken, setUserToken] = useState(null);
   const [image, setImage] = useState(null);
@@ -104,7 +152,15 @@ export default function KSeFAsystent() {
   const fileInputRef = useRef(null);
   const paywallRef = useRef(null);
 
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, loading]);
+  const lastMsgRef = useRef(null);
+  useEffect(() => {
+    if (messages.length > 0 && messages[messages.length - 1].role === "assistant") {
+      setTimeout(() => lastMsgRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+  useEffect(() => { if (loading) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [loading]);
   useEffect(() => { if (showPaywall && paywallRef.current) setTimeout(() => paywallRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 100); }, [showPaywall]);
 
   const handleImageUpload = (e) => {
@@ -172,9 +228,14 @@ export default function KSeFAsystent() {
       `}</style>
 
       {showPricing && <PricingModal onClose={() => setShowPricing(false)} onEnterToken={handleEnterToken} showTokenField={true} />}
+      {showSafety && <SafetyModal onClose={() => setShowSafety(false)} />}
 
       <div style={{ width: "100%", background: "linear-gradient(135deg, #3730a3, #4f46e5, #6366f1)", padding: "20px 20px 16px", textAlign: "center", position: "sticky", top: 0, zIndex: 10, boxShadow: "0 4px 20px rgba(79,70,229,0.25)" }}>
         {!isPaid && <button onClick={() => setShowPricing(true)} style={{ position: "absolute", top: 14, right: 16, background: "rgba(255,255,255,0.2)", border: "1.5px solid rgba(255,255,255,0.4)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Kup dostęp</button>}
+        <div style={{ position: "absolute", top: 14, left: 16, display: "flex", flexDirection: "column", gap: 6 }}>
+          <button onClick={() => setShowSafety(true)} style={{ background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit" }}>🛡️ Bezpieczeństwo</button>
+          <a href="https://status.podatki.gov.pl" target="_blank" rel="noopener noreferrer" style={{ background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit", textDecoration: "none", textAlign: "center" }}>🟢 Status MF</a>
+        </div>
         <div style={{ fontSize: "2rem", marginBottom: 4 }}>📄</div>
         <h1 style={{ margin: 0, fontFamily: "'Playfair Display', serif", fontSize: "1.6rem", color: "white", fontWeight: 700 }}>Asystent KSeF</h1>
         <p style={{ margin: "4px 0 0", color: "#c7d2fe", fontSize: "0.85rem", fontWeight: 300 }}>e-Faktury po ludzku • Przepisy bez stresu • Wsparcie psychologiczne</p>
@@ -193,11 +254,11 @@ export default function KSeFAsystent() {
 
       <div style={{ maxWidth: 680, width: "calc(100% - 32px)", margin: "20px 16px 0", flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
         {messages.map((msg, i) => (
-          <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", animation: "fadeIn 0.35s ease" }}>
+          <div key={i} ref={i === messages.length - 1 ? lastMsgRef : null} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", animation: "fadeIn 0.35s ease" }}>
             {msg.role === "assistant" && <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #4f46e5, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem", flexShrink: 0, marginRight: 10, marginTop: 4, boxShadow: "0 2px 8px rgba(99,102,241,0.3)" }}>📄</div>}
             <div style={{ maxWidth: "78%", background: msg.role === "user" ? "linear-gradient(135deg, #4f46e5, #6366f1)" : "white", color: msg.role === "user" ? "white" : "#1e1b4b", borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px", padding: "12px 16px", fontSize: "0.88rem", lineHeight: 1.65, boxShadow: msg.role === "user" ? "0 4px 12px rgba(79,70,229,0.3)" : "0 2px 12px rgba(0,0,0,0.07)" }}>
               {msg.hasImage && msg.imagePreview && <img src={msg.imagePreview} alt="faktura" style={{ maxWidth: "100%", borderRadius: 8, marginBottom: 8, display: "block" }} />}
-              {msg.role === "assistant" ? formatMessage(msg.content) : msg.content}
+              {msg.role === "assistant" ? (msg.isOnboarding ? formatOnboarding(msg.content, () => setPage("terms")) : formatMessage(msg.content)) : msg.content}
             </div>
           </div>
         ))}
@@ -220,7 +281,10 @@ export default function KSeFAsystent() {
         {(imagePreview || image?.isPdf) && (
           <div style={{ background: "white", borderRadius: "12px 12px 0 0", padding: "8px 12px", display: "flex", alignItems: "center", gap: 10, border: "1.5px solid #e0e7ff", borderBottom: "none" }}>
             {image?.isPdf ? <div style={{ width: 48, height: 48, borderRadius: 6, background: "#fee2e2", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.4rem", flexShrink: 0 }}>📄</div> : <img src={imagePreview} alt="podgląd" style={{ height: 48, borderRadius: 6, objectFit: "cover" }} />}
-            <span style={{ fontSize: "0.82rem", color: "#6b7280", flex: 1 }}>{image?.isPdf ? image.fileName : "Faktura gotowa do analizy"}</span>
+            <div style={{ flex: 1 }}>
+            <span style={{ fontSize: "0.82rem", color: "#6b7280", display: "block" }}>{image?.isPdf ? image.fileName : "Zdjęcie faktury"}</span>
+            <span style={{ fontSize: "0.72rem", color: "#9ca3af" }}>Analiza pliku ma charakter poglądowy</span>
+          </div>
             <button onClick={removeImage} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: "1.1rem", padding: 4 }}>✕</button>
           </div>
         )}
@@ -230,11 +294,13 @@ export default function KSeFAsystent() {
           <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKey} placeholder={isPaid ? "Napisz pytanie lub wyślij zdjęcie faktury..." : "Napisz pytanie o KSeF, błąd, problem..."} disabled={loading} rows={1} style={{ flex: 1, border: "none", background: "transparent", resize: "none", fontSize: "0.9rem", fontFamily: "inherit", color: "#1e1b4b", padding: "6px 0", lineHeight: 1.5, maxHeight: 120, overflowY: "auto" }} onInput={(e) => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }} />
           <button className="send-btn" onClick={() => sendMessage()} disabled={loading || (!input.trim() && !image)} style={{ background: (loading || (!input.trim() && !image)) ? "#c7d2fe" : "#4f46e5", color: "white", border: "none", borderRadius: 14, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", cursor: (loading || (!input.trim() && !image)) ? "not-allowed" : "pointer", transition: "background 0.2s", flexShrink: 0, fontSize: "1rem" }}>{loading ? "⏳" : "↑"}</button>
         </div>
-        <p style={{ textAlign: "center", margin: "8px 0 0", fontSize: "0.72rem", color: "#a5b4fc" }}>Asystent AI — nie zastępuje doradcy podatkowego. Dane przesyłane są przez Anthropic API i nie są przez nas przechowywane.</p>
+        <p style={{ textAlign: "center", margin: "8px 0 0", fontSize: "0.72rem", color: "#a5b4fc" }}>AI może generować błędy. Zawsze weryfikuj ważne decyzje z księgowością. Dane przetwarzane przez Anthropic API.</p>
         <p style={{ textAlign: "center", margin: "6px 0 0", fontSize: "0.72rem" }}>
           <button onClick={() => setPage("terms")} style={{ background: "none", border: "none", color: "#a5b4fc", cursor: "pointer", fontSize: "0.72rem", fontFamily: "inherit", textDecoration: "underline", padding: 0 }}>Regulamin</button>
           <span style={{ color: "#c7d2fe", margin: "0 6px" }}>•</span>
           <button onClick={() => setPage("privacy")} style={{ background: "none", border: "none", color: "#a5b4fc", cursor: "pointer", fontSize: "0.72rem", fontFamily: "inherit", textDecoration: "underline", padding: 0 }}>Polityka prywatności</button>
+          <span style={{ color: "#c7d2fe", margin: "0 6px" }}>•</span>
+          <a href="https://status.podatki.gov.pl" target="_blank" rel="noopener noreferrer" style={{ color: "#a5b4fc", fontSize: "0.72rem", textDecoration: "underline" }}>Status KSeF</a>
         </p>
       </div>
     </div>

@@ -57,15 +57,10 @@ const PLANS = [
     link: "https://buy.stripe.com/14AfZh3RFbKBaB41Oycwg02" },
 ];
 
-// Modal z planami i formularzem kontaktowym
+// Modal z planami i płatnościami Stripe
 const PricingModal = ({ onClose, onEnterToken, showTokenField }) => {
   const [token, setToken] = useState("");
   const [selectedPlan, setSelectedPlan] = useState("solo");
-
-  const handleOrder = () => {
-    if (!contact.trim()) return;
-    setSent(true);
-  };
 
   return (
     <div style={{
@@ -91,77 +86,70 @@ const PricingModal = ({ onClose, onEnterToken, showTokenField }) => {
         </div>
 
         {/* Plany */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
-              {PLANS.map(plan => (
-                <div
-                  key={plan.id}
-                  onClick={() => setSelectedPlan(plan.id)}
-                  style={{
-                    border: selectedPlan === plan.id ? "2px solid #4f46e5" : "2px solid #e0e7ff",
-                    borderRadius: 12, padding: "12px 16px", cursor: "pointer",
-                    background: selectedPlan === plan.id ? "#f5f3ff" : "white",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ fontWeight: 700, color: "#1e1b4b", fontSize: "0.95rem" }}>{plan.name}</div>
-                    <div style={{ fontWeight: 700, color: "#4f46e5", fontSize: "0.95rem" }}>{plan.price}</div>
-                  </div>
-                  <div style={{ color: "#6b7280", fontSize: "0.8rem", marginTop: 3 }}>{plan.desc}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Formularz */}
-            <a
-              href={PLANS.find(p => p.id === selectedPlan)?.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: "block", width: "100%", background: "#4f46e5",
-                color: "white", borderRadius: 12, padding: "12px",
-                fontWeight: 700, fontSize: "0.95rem", textAlign: "center",
-                textDecoration: "none", marginBottom: 16,
-              }}
-            >
-              Zapłać — {PLANS.find(p => p.id === selectedPlan)?.price}
-            </a>
-
-            <p style={{ margin: "0 0 16px", fontSize: "0.75rem", color: "#9ca3af", textAlign: "center", lineHeight: 1.5 }}>
-              Zostaniesz przekierowany na stronę płatności Stripe. Kod dostępu otrzymasz emailem po opłaceniu.
-            </p>
-
-            {/* Już masz kod */}
-            {showTokenField && (
-              <div style={{ borderTop: "1px solid #e0e7ff", paddingTop: 16 }}>
-                <p style={{ margin: "0 0 8px", fontSize: "0.82rem", color: "#6b7280", textAlign: "center" }}>
-                  Masz już kod dostępu?
-                </p>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <input
-                    value={token}
-                    onChange={(e) => setToken(e.target.value)}
-                    placeholder="Wpisz kod"
-                    style={{
-                      flex: 1, padding: "8px 12px", borderRadius: 10,
-                      border: "1.5px solid #e0e7ff", fontSize: "0.88rem", fontFamily: "inherit",
-                    }}
-                  />
-                  <button
-                    onClick={() => token.trim() && onEnterToken(token.trim())}
-                    style={{
-                      background: "#4f46e5", color: "white", border: "none",
-                      borderRadius: 10, padding: "8px 16px", cursor: "pointer",
-                      fontSize: "0.88rem", fontWeight: 600,
-                    }}
-                  >
-                    Wejdź
-                  </button>
-                </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+          {PLANS.map(plan => (
+            <div key={plan.id} onClick={() => setSelectedPlan(plan.id)} style={{
+              border: selectedPlan === plan.id ? "2px solid #4f46e5" : "2px solid #e0e7ff",
+              borderRadius: 12, padding: "12px 16px", cursor: "pointer",
+              background: selectedPlan === plan.id ? "#f5f3ff" : "white",
+              transition: "all 0.15s",
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontWeight: 700, color: "#1e1b4b", fontSize: "0.95rem" }}>{plan.name}</div>
+                <div style={{ fontWeight: 700, color: "#4f46e5", fontSize: "0.95rem" }}>{plan.price}</div>
               </div>
-            )}
-          </div>
+              <div style={{ color: "#6b7280", fontSize: "0.8rem", marginTop: 3 }}>{plan.desc}</div>
+            </div>
+          ))}
         </div>
+
+        {/* Przycisk Stripe */}
+        <a
+          href={PLANS.find(p => p.id === selectedPlan)?.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "block", width: "100%", background: "#4f46e5",
+            color: "white", borderRadius: 12, padding: "12px",
+            fontWeight: 700, fontSize: "0.95rem", textAlign: "center",
+            textDecoration: "none", marginBottom: 8,
+          }}
+        >
+          Zapłać — {PLANS.find(p => p.id === selectedPlan)?.price}
+        </a>
+        <p style={{ margin: "0 0 16px", fontSize: "0.75rem", color: "#9ca3af", textAlign: "center", lineHeight: 1.5 }}>
+          Zostaniesz przekierowany na stronę płatności Stripe. Kod dostępu otrzymasz emailem po opłaceniu.
+        </p>
+
+        {/* Już masz kod */}
+        {showTokenField && (
+          <div style={{ borderTop: "1px solid #e0e7ff", paddingTop: 16 }}>
+            <p style={{ margin: "0 0 8px", fontSize: "0.82rem", color: "#6b7280", textAlign: "center" }}>
+              Masz już kod dostępu?
+            </p>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                placeholder="Wpisz kod"
+                style={{
+                  flex: 1, padding: "8px 12px", borderRadius: 10,
+                  border: "1.5px solid #e0e7ff", fontSize: "0.88rem", fontFamily: "inherit",
+                }}
+              />
+              <button
+                onClick={() => token.trim() && onEnterToken(token.trim())}
+                style={{
+                  background: "#4f46e5", color: "white", border: "none",
+                  borderRadius: 10, padding: "8px 16px", cursor: "pointer",
+                  fontSize: "0.88rem", fontWeight: 600,
+                }}
+              >
+                Wejdź
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -534,116 +522,116 @@ export default function KSeFAsystent() {
         </div>
       )}
 
+
       {/* Input — zawsze widoczny */}
       <div style={{
-          maxWidth: 680, width: "calc(100% - 32px)", margin: "16px 16px 0",
-          position: "sticky", bottom: 16,
-        }}>
-          {/* Podgląd obrazu */}
-          {(imagePreview || (image?.isPdf)) && (
-            <div style={{
-              background: "white", borderRadius: "12px 12px 0 0", padding: "8px 12px",
-              display: "flex", alignItems: "center", gap: 10,
-              border: "1.5px solid #e0e7ff", borderBottom: "none",
-            }}>
-              {image?.isPdf
-                ? <div style={{
-                    width: 48, height: 48, borderRadius: 6, background: "#fee2e2",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "1.4rem", flexShrink: 0,
-                  }}>📄</div>
-                : <img src={imagePreview} alt="podgląd" style={{ height: 48, borderRadius: 6, objectFit: "cover" }} />
-              }
-              <span style={{ fontSize: "0.82rem", color: "#6b7280", flex: 1 }}>
-                {image?.isPdf ? image.fileName : "Faktura gotowa do analizy"}
-              </span>
-              <button onClick={removeImage} style={{
-                background: "none", border: "none", cursor: "pointer",
-                color: "#9ca3af", fontSize: "1.1rem", padding: 4,
-              }}>✕</button>
-            </div>
-          )}
-
+        maxWidth: 680, width: "calc(100% - 32px)", margin: "16px 16px 0",
+        position: "sticky", bottom: 16,
+      }}>
+        {/* Podgląd obrazu/PDF */}
+        {(imagePreview || image?.isPdf) && (
           <div style={{
-            background: "white",
-            borderRadius: (imagePreview || image?.isPdf) ? "0 0 20px 20px" : 20,
-            padding: "8px 8px 8px 16px",
-            display: "flex", alignItems: "flex-end", gap: 8,
-            boxShadow: "0 4px 24px rgba(99,102,241,0.15)",
-            border: "1.5px solid #e0e7ff",
+            background: "white", borderRadius: "12px 12px 0 0", padding: "8px 12px",
+            display: "flex", alignItems: "center", gap: 10,
+            border: "1.5px solid #e0e7ff", borderBottom: "none",
           }}>
-            {/* Przycisk zdjęcia — tylko dla płatnych */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,application/pdf"
-              style={{ display: "none" }}
-              onChange={handleImageUpload}
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              title={isPaid ? "Wyślij fakturę do analizy" : "Dostępne w płatnych planach"}
-              style={{
-                background: isPaid ? "#f5f3ff" : "#f9fafb",
-                border: "1.5px solid " + (isPaid ? "#c7d2fe" : "#e5e7eb"),
-                borderRadius: 12, width: 36, height: 36,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: isPaid ? "pointer" : "not-allowed",
-                flexShrink: 0, fontSize: "1rem",
-                color: isPaid ? "#6366f1" : "#d1d5db",
-              }}
-            >
-              📎
-            </button>
-
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKey}
-              placeholder={isPaid ? "Napisz pytanie lub wyślij zdjęcie faktury..." : "Napisz pytanie o KSeF, błąd, problem..."}
-              disabled={loading}
-              rows={1}
-              style={{
-                flex: 1, border: "none", background: "transparent", resize: "none",
-                fontSize: "0.9rem", fontFamily: "inherit", color: "#1e1b4b",
-                padding: "6px 0", lineHeight: 1.5, maxHeight: 120, overflowY: "auto",
-              }}
-              onInput={(e) => {
-                e.target.style.height = "auto";
-                e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
-              }}
-            />
-            <button
-              className="send-btn"
-              onClick={() => sendMessage()}
-              disabled={loading || (!input.trim() && !image)}
-              style={{
-                background: (loading || (!input.trim() && !image)) ? "#c7d2fe" : "#4f46e5",
-                color: "white", border: "none", borderRadius: 14,
-                width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: (loading || (!input.trim() && !image)) ? "not-allowed" : "pointer",
-                transition: "background 0.2s", flexShrink: 0, fontSize: "1rem",
-              }}
-            >
-              {loading ? "⏳" : "↑"}
-            </button>
+            {image?.isPdf
+              ? <div style={{
+                  width: 48, height: 48, borderRadius: 6, background: "#fee2e2",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "1.4rem", flexShrink: 0,
+                }}>📄</div>
+              : <img src={imagePreview} alt="podgląd" style={{ height: 48, borderRadius: 6, objectFit: "cover" }} />
+            }
+            <span style={{ fontSize: "0.82rem", color: "#6b7280", flex: 1 }}>
+              {image?.isPdf ? image.fileName : "Faktura gotowa do analizy"}
+            </span>
+            <button onClick={removeImage} style={{
+              background: "none", border: "none", cursor: "pointer",
+              color: "#9ca3af", fontSize: "1.1rem", padding: 4,
+            }}>✕</button>
           </div>
-          <p style={{ textAlign: "center", margin: "8px 0 0", fontSize: "0.72rem", color: "#a5b4fc" }}>
-            Asystent AI — nie zastępuje doradcy podatkowego. Dane przesyłane są przez Anthropic API i nie są przez nas przechowywane.
-          </p>
-          <p style={{ textAlign: "center", margin: "6px 0 0", fontSize: "0.72rem" }}>
-            <button onClick={() => setPage("terms")} style={{
-              background: "none", border: "none", color: "#a5b4fc", cursor: "pointer",
-              fontSize: "0.72rem", fontFamily: "inherit", textDecoration: "underline", padding: 0,
-            }}>Regulamin</button>
-            <span style={{ color: "#c7d2fe", margin: "0 6px" }}>•</span>
-            <button onClick={() => setPage("privacy")} style={{
-              background: "none", border: "none", color: "#a5b4fc", cursor: "pointer",
-              fontSize: "0.72rem", fontFamily: "inherit", textDecoration: "underline", padding: 0,
-            }}>Polityka prywatności</button>
-          </p>
+        )}
+
+        <div style={{
+          background: "white",
+          borderRadius: (imagePreview || image?.isPdf) ? "0 0 20px 20px" : 20,
+          padding: "8px 8px 8px 16px",
+          display: "flex", alignItems: "flex-end", gap: 8,
+          boxShadow: "0 4px 24px rgba(99,102,241,0.15)",
+          border: "1.5px solid #e0e7ff",
+        }}>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,application/pdf"
+            style={{ display: "none" }}
+            onChange={handleImageUpload}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            title={isPaid ? "Wyślij fakturę do analizy" : "Dostępne w płatnych planach"}
+            style={{
+              background: isPaid ? "#f5f3ff" : "#f9fafb",
+              border: "1.5px solid " + (isPaid ? "#c7d2fe" : "#e5e7eb"),
+              borderRadius: 12, width: 36, height: 36,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: isPaid ? "pointer" : "not-allowed",
+              flexShrink: 0, fontSize: "1rem",
+              color: isPaid ? "#6366f1" : "#d1d5db",
+            }}
+          >📎</button>
+
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKey}
+            placeholder={isPaid ? "Napisz pytanie lub wyślij zdjęcie faktury..." : "Napisz pytanie o KSeF, błąd, problem..."}
+            disabled={loading}
+            rows={1}
+            style={{
+              flex: 1, border: "none", background: "transparent", resize: "none",
+              fontSize: "0.9rem", fontFamily: "inherit", color: "#1e1b4b",
+              padding: "6px 0", lineHeight: 1.5, maxHeight: 120, overflowY: "auto",
+            }}
+            onInput={(e) => {
+              e.target.style.height = "auto";
+              e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+            }}
+          />
+          <button
+            className="send-btn"
+            onClick={() => sendMessage()}
+            disabled={loading || (!input.trim() && !image)}
+            style={{
+              background: (loading || (!input.trim() && !image)) ? "#c7d2fe" : "#4f46e5",
+              color: "white", border: "none", borderRadius: 14,
+              width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: (loading || (!input.trim() && !image)) ? "not-allowed" : "pointer",
+              transition: "background 0.2s", flexShrink: 0, fontSize: "1rem",
+            }}
+          >
+            {loading ? "⏳" : "↑"}
+          </button>
         </div>
+
+        <p style={{ textAlign: "center", margin: "8px 0 0", fontSize: "0.72rem", color: "#a5b4fc" }}>
+          Asystent AI — nie zastępuje doradcy podatkowego. Dane przesyłane są przez Anthropic API i nie są przez nas przechowywane.
+        </p>
+        <p style={{ textAlign: "center", margin: "6px 0 0", fontSize: "0.72rem" }}>
+          <button onClick={() => setPage("terms")} style={{
+            background: "none", border: "none", color: "#a5b4fc", cursor: "pointer",
+            fontSize: "0.72rem", fontFamily: "inherit", textDecoration: "underline", padding: 0,
+          }}>Regulamin</button>
+          <span style={{ color: "#c7d2fe", margin: "0 6px" }}>•</span>
+          <button onClick={() => setPage("privacy")} style={{
+            background: "none", border: "none", color: "#a5b4fc", cursor: "pointer",
+            fontSize: "0.72rem", fontFamily: "inherit", textDecoration: "underline", padding: 0,
+          }}>Polityka prywatności</button>
+        </p>
+      </div>
     </div>
+  </div>
   );
 }

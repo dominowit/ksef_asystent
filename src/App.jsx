@@ -32,10 +32,10 @@ const parseBold = (text) => {
 
 const formatMessage = (text) => {
   return text.split("\n").map((line, i) => {
-    if (line.startsWith("### ")) return <h3 key={i} style={{ margin: "12px 0 4px", fontSize: "0.95rem", color: "#312e81", fontFamily: "'Playfair Display', serif" }}>{line.slice(4)}</h3>;
-    if (line.startsWith("## ")) return <h2 key={i} style={{ margin: "14px 0 6px", fontSize: "1.05rem", color: "#1e1b4b", fontFamily: "'Playfair Display', serif" }}>{line.slice(3)}</h2>;
+    if (line.startsWith("### ")) return <h3 key={i} style={{ margin: "12px 0 4px", fontSize: "0.95rem", color: "#312e81" }}>{line.slice(4)}</h3>;
+    if (line.startsWith("## ")) return <h2 key={i} style={{ margin: "14px 0 6px", fontSize: "1.05rem", color: "#1e1b4b" }}>{line.slice(3)}</h2>;
     if (line.startsWith("- ")) return <div key={i} style={{ paddingLeft: 16, margin: "2px 0", display: "flex", gap: 8 }}><span style={{ color: "#6366f1", flexShrink: 0 }}>•</span><span>{parseBold(line.slice(2))}</span></div>;
-    if (/^\d+\./.test(line)) return <div key={i} style={{ paddingLeft: 16, margin: "2px 0" }}>{parseBold(line)}</div>;
+    if (/^[0-9]+[.]/.test(line)) return <div key={i} style={{ paddingLeft: 16, margin: "2px 0" }}>{parseBold(line)}</div>;
     if (line.trim() === "") return <div key={i} style={{ height: 6 }} />;
     return <p key={i} style={{ margin: "3px 0", lineHeight: 1.65 }}>{parseBold(line)}</p>;
   });

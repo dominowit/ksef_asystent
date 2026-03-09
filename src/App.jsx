@@ -243,7 +243,17 @@ export default function KSeFAsystent() {
             {msg.role === "assistant" && <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #4f46e5, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem", flexShrink: 0, marginRight: 10, marginTop: 4, boxShadow: "0 2px 8px rgba(99,102,241,0.3)" }}>📄</div>}
             <div style={{ maxWidth: "78%", background: msg.role === "user" ? "linear-gradient(135deg, #4f46e5, #6366f1)" : "white", color: msg.role === "user" ? "white" : "#1e1b4b", borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px", padding: "12px 16px", fontSize: "0.88rem", lineHeight: 1.65, boxShadow: msg.role === "user" ? "0 4px 12px rgba(79,70,229,0.3)" : "0 2px 12px rgba(0,0,0,0.07)" }}>
               {msg.hasImage && msg.imagePreview && <img src={msg.imagePreview} alt="faktura" style={{ maxWidth: "100%", borderRadius: 8, marginBottom: 8, display: "block" }} />}
-              {msg.role === "assistant" ? (msg.isOnboarding ? formatOnboarding(msg.content, () => setPage("terms")) : formatMessage(msg.content)) : msg.content}
+              {msg.role === "assistant" ? (msg.isOnboarding ? (
+                <div>
+                  <p style={{ margin: "0 0 8px" }}>Cześć! Pomogę Ci z KSeF i stresem z nim związanym.</p>
+                  <div style={{ background: "#f5f3ff", borderRadius: 8, padding: "8px 10px", fontSize: "0.83rem", color: "#4338ca", lineHeight: 1.6, margin: "0 0 8px" }}>
+                    ⚠️ Nie jestem doradcą podatkowym, terapeutą ani lekarzem. Korzystając z asystenta, akceptujesz{" "}
+                    <button onClick={() => setPage("terms")} style={{ background: "none", border: "none", padding: 0, color: "#4f46e5", textDecoration: "underline", cursor: "pointer", fontFamily: "inherit", fontSize: "inherit" }}>regulamin</button>.
+                  </div>
+                  <p style={{ margin: "0 0 4px" }}>Możesz pytać o terminy, błędy, uprawnienia, integracje — masz 5 bezpłatnych wiadomości na start.</p>
+                  <p style={{ margin: 0, fontSize: "0.83rem", color: "#6b7280" }}>Każda sesja jest niezależna. Co Cię sprowadza?</p>
+                </div>
+              ) : formatMessage(msg.content)) : msg.content}
             </div>
           </div>
         ))}

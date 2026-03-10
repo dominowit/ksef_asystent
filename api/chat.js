@@ -1,6 +1,8 @@
 // api/chat.js — Vercel Function
 // Chroni klucz API, liczy wiadomości, obsługuje plany freemium/płatne
 
+import { createClient } from "@supabase/supabase-js";
+
 const FREE_MESSAGE_LIMIT = 5;
 const PLAN_LIMITS = {
   solo: 200,
@@ -8,13 +10,25 @@ const PLAN_LIMITS = {
   business: 2000,
 };
 
-// Prosta baza planów — w przyszłości zastąp prawdziwą bazą danych
-// klucz: token użytkownika, wartość: plan ("free", "solo", "small", "business")
-const PAID_TOKENS = {
-  // Dodaj tu tokeny płacących klientów, np.:
-  // "ABC123XYZ": "solo",
-  // "DEF456UVW": "small",
-};
+// Weryfikacja tokenu w Supabase (zastępuje hardkodowany PAID_TOKENS)
+async function verifyToken(token) {
+  if (!token) return null;
+
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY
+  );
+
+  const { data, error } = await supabase
+    .from("paid_tokens")
+    .select("plan, active")
+    .eq("token", token.toUpperCase())
+    .eq("active", true)
+    .single();
+
+  if (error || !data) return null;
+  return data.plan; // "solo" | "small" | "firma"
+}
 
 const SYSTEM_PROMPT = `Jesteś Asystentem KSeF — pomagasz małym firmom wdrożyć e-faktury i rozumieć przepisy. Jesteś po stronie użytkownika, nie systemu. Widzisz absurdy KSeF i nie udajesz, że ich nie ma.
 
@@ -199,7 +213,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // CORS — pozwól na zapytania z Twojej domeny
+  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
@@ -209,8 +223,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Brak wiadomości" });
   }
 
-  // Sprawdź plan użytkownika
-  const plan = userToken ? (PAID_TOKENS[userToken] || null) : null;
+  // Sprawdź plan użytkownika w Supabase
+  const plan = await verifyToken(userToken);
   const isPaid = plan !== null;
 
   // Freemium: blokuj po 5 wiadomościach
@@ -237,7 +251,7 @@ export default async function handler(req, res) {
     });
   }
 
-  // Ogranicz historię do ostatnich 10 wiadomości (kontrola kosztów)
+  // Ogranicz historię do ostatnich 10 wiadomości
   const trimmedMessages = messages.slice(-10);
 
   try {

@@ -103,7 +103,7 @@ export default async function handler(req, res) {
     }
 
     await resend.emails.send({
-      from: "KSeF Asystent <noreply@twojadomena.pl>",
+      from: "KSeF Asystent <onboarding@resend.dev>",
       to: customerEmail,
       subject: "Twój token dostępu — KSeF Asystent",
       html: `
@@ -118,7 +118,7 @@ export default async function handler(req, res) {
           </div>
           <p>Jak użyć tokenu:</p>
           <ol>
-            <li>Otwórz <a href="https://twojadomena.vercel.app">KSeF Asystent</a></li>
+            <li>Otwórz <a href="https://ksef-asystent.vercel.app">KSeF Asystent</a></li>
             <li>Kliknij przycisk "🔑 Mam token"</li>
             <li>Wpisz powyższy kod</li>
           </ol>
@@ -152,7 +152,7 @@ export default async function handler(req, res) {
 
     if (customerEmail) {
       await resend.emails.send({
-        from: "KSeF Asystent <noreply@twojadomena.pl>",
+        from: "KSeF Asystent <onboarding@resend.dev>",
         to: customerEmail,
         subject: "Subskrypcja anulowana — KSeF Asystent",
         html: `
@@ -160,7 +160,7 @@ export default async function handler(req, res) {
             <h2>Subskrypcja została anulowana</h2>
             <p>Twój dostęp do KSeF Asystenta wygasł.</p>
             <p>Jeśli chcesz wznowić subskrypcję:</p>
-            <a href="https://twojadomena.vercel.app"
+            <a href="https://ksef-asystent.vercel.app"
                style="display:inline-block; background:#2563eb; color:white;
                       padding:12px 24px; border-radius:6px; text-decoration:none;">
               Wróć do KSeF Asystenta

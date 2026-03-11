@@ -124,7 +124,7 @@ export default async function handler(req, res) {
           </ol>
           <p>Token jest ważny przez cały okres subskrypcji i odnawia się automatycznie.</p>
           <p style="color: #666; font-size: 14px;">
-            Pytania: <a href="mailto:twoj@email.pl">twoj@email.pl</a>
+            Pytania: <a href="mailto:dominowit@gmail.com">dominowit@gmail.com</a>
           </p>
         </div>
       `,
@@ -166,7 +166,7 @@ export default async function handler(req, res) {
               Wróć do KSeF Asystenta
             </a>
             <p style="color: #666; font-size: 14px; margin-top: 20px;">
-              Pytania: <a href="mailto:twoj@email.pl">twoj@email.pl</a>
+              Pytania: <a href="mailto:dominowit@gmail.com">dominowit@gmail.com</a>
             </p>
           </div>
         `,

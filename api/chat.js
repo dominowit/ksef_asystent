@@ -91,7 +91,7 @@ HTTP / Ogólne:
 - 404 Not Found — faktura o podanym numerze KSeF nie istnieje w systemie
 - 408 / Timeout — serwery MF przeciążone; odczekaj kilka minut i spróbuj ponownie
 - 409 Conflict — faktura o tym numerze już istnieje w systemie (duplikat)
-- 500 Internal Server Error — błąd po stronie serwerów MF; sprawdź status.podatki.gov.pl i poczekaj
+- 500 Internal Server Error — błąd po stronie serwerów MF; sprawdź ksef.systems i poczekaj
 
 Kody KSeF (ExceptionDetailType):
 - KSeF-00001 — nieprawidłowy NIP wystawcy; zweryfikuj NIP na białej liście podatników VAT
@@ -115,7 +115,7 @@ Błędy schematu XML:
 Tryb awaryjny aktywuje się gdy system MF jest niedostępny nieprzerwanie przez ponad 4 godziny.
 
 Jak postępować:
-1. Sprawdź status systemu na status.podatki.gov.pl — potwierdź że to awaria systemowa, nie Twój problem
+1. Sprawdź status systemu na ksef.systems — potwierdź że to awaria systemowa, nie Twój problem
 2. Udokumentuj próby wysyłki: zrób zrzuty ekranu z datą i godziną każdej nieudanej próby
 3. Wystaw fakturę poza KSeF — normalnie, w swoim programie, z oznaczeniem "TRYB AWARYJNY KSeF"
 4. Zachowaj dokument potwierdzający awarię (zrzut ekranu ze strony MF z datą)

@@ -260,30 +260,33 @@ export default function GlowaDoksef() {
         @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-6px); opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+        @media (max-width: 480px) {
+          .header-title { font-size: 1.1rem !important; }
+          .header-subtitle { font-size: 0.72rem !important; }
+          .header-btn-small { font-size: 0.65rem !important; padding: 4px 8px !important; }
+        }
       `}</style>
 
       {showPricing && <PricingModal onClose={() => setShowPricing(false)} onEnterToken={handleEnterToken} showTokenField={true} />}
       {showSafety && <SafetyModal onClose={() => setShowSafety(false)} />}
 
-      <div style={{ width: "100%", background: "linear-gradient(135deg, #3730a3, #4f46e5, #6366f1)", padding: "20px 20px 16px", textAlign: "center", position: "sticky", top: 0, zIndex: 10, boxShadow: "0 4px 20px rgba(79,70,229,0.25)" }}>
+      <div style={{ width: "100%", background: "linear-gradient(135deg, #3730a3, #4f46e5, #6366f1)", padding: "20px 20px 16px", textAlign: "center", position: "sticky", top: 0, zIndex: 10, boxShadow: "0 4px 20px rgba(79,70,229,0.25)", overflow: "visible" }}>
         <div style={{ position: "absolute", top: 14, left: 16, display: "flex", flexDirection: "column", gap: 6 }}>
-          <button onClick={() => setShowSafety(true)} style={{ background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit" }}>🛡️ Bezpieczeństwo</button>
-          <a href="https://ksef.systems" target="_blank" rel="noopener noreferrer" style={{ background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit", textDecoration: "none", textAlign: "center" }}>🟢 Status MF</a>
+          <button onClick={() => setShowSafety(true)} className="header-btn-small" style={{ background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit" }}>🛡️ Bezpieczeństwo</button>
+          <a href="https://ksef.systems" target="_blank" rel="noopener noreferrer" className="header-btn-small" style={{ background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit", textDecoration: "none", textAlign: "center" }}>🟢 Status MF</a>
         </div>
         {!isPaid && (
-          <button onClick={() => setShowPricing(true)} style={{ position: "absolute", top: 14, right: 16, background: "rgba(255,255,255,0.2)", border: "1.5px solid rgba(255,255,255,0.4)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Kup dostęp</button>
+          <button onClick={() => setShowPricing(true)} className="header-btn-small" style={{ position: "absolute", top: 14, right: 16, background: "rgba(255,255,255,0.2)", border: "1.5px solid rgba(255,255,255,0.4)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+            {remainingFree > 0 ? `Kup dostęp · ${remainingFree}/${FREE_LIMIT} wiad.` : "⚠️ Limit wyczerpany"}
+          </button>
         )}
         {isPaid && (
           <a href="https://billing.stripe.com/p/login/cNi4gzcobg0R38C64Ocwg00" target="_blank" rel="noopener noreferrer" style={{ position: "absolute", top: 14, right: 16, background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit", textDecoration: "none" }}>Zarządzaj subskrypcją</a>
         )}
-        <img src="/logo.png" alt="Głowa do KSeF" style={{ width: 80, height: 80, objectFit: "contain", marginBottom: 4 }} />
-        <h1 style={{ margin: 0, fontFamily: "'Playfair Display', serif", fontSize: "1.6rem", color: "white", fontWeight: 700 }}>Głowa do KSeF</h1>
-        <p style={{ margin: "4px 0 0", color: "#c7d2fe", fontSize: "0.85rem", fontWeight: 300 }}>e-Faktury po ludzku • Przepisy bez stresu • Wsparcie psychologiczne</p>
-        {!isPaid && (
-          <div style={{ marginTop: 10, background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "4px 14px", display: "inline-block", fontSize: "0.78rem", color: "white" }}>
-            {remainingFree > 0 ? `Pozostało ${remainingFree} z ${FREE_LIMIT} bezpłatnych wiadomości` : "Limit wyczerpany"}
-          </div>
-        )}
+        <img src="/logo.png" alt="Głowa do KSeF" style={{ width: 147, height: 147, objectFit: "contain", position: "absolute", left: "50%", transform: "translateX(-50%)", top: "30%", marginTop: -73, pointerEvents: "none" }} />
+        <div style={{ height: 120, display: "block" }} />
+        <h1 className="header-title" style={{ margin: 0, fontFamily: "'Playfair Display', serif", fontSize: "1.6rem", color: "white", fontWeight: 700 }}>Głowa do KSeF</h1>
+        <p className="header-subtitle" style={{ margin: "4px 0 0", color: "#c7d2fe", fontSize: "0.85rem", fontWeight: 300 }}>e-Faktury po ludzku • Przepisy bez stresu • Wsparcie psychologiczne</p>
         {isPaid && (
           <div style={{ marginTop: 10, background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "4px 14px", display: "inline-block", fontSize: "0.78rem", color: "#a5f3fc" }}>Pełny dostęp</div>
         )}

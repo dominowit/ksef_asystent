@@ -273,7 +273,10 @@ export default function GlowaDoksef() {
         {!isPaid && (
           <button onClick={() => setShowPricing(true)} style={{ position: "absolute", top: 14, right: 16, background: "rgba(255,255,255,0.2)", border: "1.5px solid rgba(255,255,255,0.4)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Kup dostęp</button>
         )}
-        <div style={{ fontSize: "2rem", marginBottom: 4 }}>📄</div>
+        {isPaid && (
+          <a href="https://billing.stripe.com/p/login/cNi4gzcobg0R38C64Ocwg00" target="_blank" rel="noopener noreferrer" style={{ position: "absolute", top: 14, right: 16, background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit", textDecoration: "none" }}>Zarządzaj subskrypcją</a>
+        )}
+        <img src="/logo.png" alt="Głowa do KSeF" style={{ width: 80, height: 80, objectFit: "contain", marginBottom: 4 }} />
         <h1 style={{ margin: 0, fontFamily: "'Playfair Display', serif", fontSize: "1.6rem", color: "white", fontWeight: 700 }}>Głowa do KSeF</h1>
         <p style={{ margin: "4px 0 0", color: "#c7d2fe", fontSize: "0.85rem", fontWeight: 300 }}>e-Faktury po ludzku • Przepisy bez stresu • Wsparcie psychologiczne</p>
         {!isPaid && (

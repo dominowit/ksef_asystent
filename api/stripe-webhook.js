@@ -103,9 +103,9 @@ export default async function handler(req, res) {
     }
 
     await resend.emails.send({
-      from: "KSeF Asystent <onboarding@resend.dev>",
+      from: "Głowa do KSeF <onboarding@resend.dev>",
       to: customerEmail,
-      subject: "Twój token dostępu — KSeF Asystent",
+      subject: "Twój token dostępu — Głowa do KSeF",
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
           <h2>Dziękujemy za subskrypcję!</h2>
@@ -118,7 +118,7 @@ export default async function handler(req, res) {
           </div>
           <p>Jak użyć tokenu:</p>
           <ol>
-            <li>Otwórz <a href="https://ksef-asystent.vercel.app">KSeF Asystent</a></li>
+            <li>Otwórz <a href="https://glowadoksef.pl">Głowa do KSeF</a></li>
             <li>Kliknij przycisk "🔑 Mam token"</li>
             <li>Wpisz powyższy kod</li>
           </ol>
@@ -152,18 +152,18 @@ export default async function handler(req, res) {
 
     if (customerEmail) {
       await resend.emails.send({
-        from: "KSeF Asystent <onboarding@resend.dev>",
+        from: "Głowa do KSeF <onboarding@resend.dev>",
         to: customerEmail,
-        subject: "Subskrypcja anulowana — KSeF Asystent",
+        subject: "Subskrypcja anulowana — Głowa do KSeF",
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
             <h2>Subskrypcja została anulowana</h2>
-            <p>Twój dostęp do KSeF Asystenta wygasł.</p>
+            <p>Twój dostęp do Głowy do KSeF wygasł.</p>
             <p>Jeśli chcesz wznowić subskrypcję:</p>
-            <a href="https://ksef-asystent.vercel.app"
+            <a href="https://glowadoksef.pl"
                style="display:inline-block; background:#2563eb; color:white;
                       padding:12px 24px; border-radius:6px; text-decoration:none;">
-              Wróć do KSeF Asystenta
+              Wróć do Głowy do KSeF
             </a>
             <p style="color: #666; font-size: 14px; margin-top: 20px;">
               Pytania: <a href="mailto:dominowit@gmail.com">dominowit@gmail.com</a>

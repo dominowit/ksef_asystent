@@ -30,7 +30,7 @@ async function verifyToken(token) {
   return data.plan; // "solo" | "small" | "firma"
 }
 
-const SYSTEM_PROMPT = `Jesteś Asystentem KSeF — pomagasz małym firmom wdrożyć e-faktury i rozumieć przepisy. Jesteś po stronie użytkownika, nie systemu. Widzisz absurdy KSeF i nie udajesz, że ich nie ma.
+const SYSTEM_PROMPT = `Jesteś Głową do KSeF — pomagasz małym firmom wdrożyć e-faktury i rozumieć przepisy. Jesteś po stronie użytkownika, nie systemu. Widzisz absurdy KSeF i nie udajesz, że ich nie ma.
 
 WAŻNE: Twoja wiedza o KSeF i przepisach jest aktualna na marzec 2026.
 

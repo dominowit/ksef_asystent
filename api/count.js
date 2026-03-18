@@ -1,5 +1,6 @@
-// api/chat/count.js — zwraca aktualny licznik dla danego fingerprintu
+// api/count.js — zwraca licznik i fingerprint bazowany na IP + user agent
 import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
@@ -7,8 +8,16 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  const { fingerprint } = req.body;
-  if (!fingerprint) return res.status(200).json({ count: 0 });
+  // Generuj fingerprint po stronie serwera z IP + user agent
+  const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim()
+    || req.headers["x-real-ip"]
+    || req.socket?.remoteAddress
+    || "unknown";
+  const ua = req.headers["user-agent"] || "unknown";
+  const fingerprint = crypto
+    .createHash("sha256")
+    .update(`${ip}::${ua}`)
+    .digest("hex");
 
   const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -26,5 +35,9 @@ export default async function handler(req, res) {
   const shouldReset = !resetAt || now > resetAt;
   const count = shouldReset ? 0 : (data?.message_count || 0);
 
-  return res.status(200).json({ count, resetAt: shouldReset ? null : data?.reset_at || null });
+  return res.status(200).json({
+    fingerprint,
+    count,
+    resetAt: shouldReset ? null : data?.reset_at || null,
+  });
 }

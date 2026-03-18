@@ -102,13 +102,13 @@ const PricingModal = ({ onClose, onEnterToken, showTokenField }) => {
             </div>
           ))}
         </div>
+        <p style={{ margin: "0 0 10px", fontSize: "0.75rem", color: "#9ca3af", textAlign: "center" }}>Podczas analizy faktur analizuję strukturę pliku, nie gromadzę Twoich danych sprzedażowych.</p>
         <a href={PLANS.find(p => p.id === selectedPlan)?.link} target="_blank" rel="noopener noreferrer" style={{ display: "block", width: "100%", background: "#4f46e5", color: "white", borderRadius: 12, padding: "12px", fontWeight: 700, fontSize: "0.95rem", textAlign: "center", textDecoration: "none", marginBottom: 8 }}>
           Zapłać — {PLANS.find(p => p.id === selectedPlan)?.price}
         </a>
-        <p style={{ margin: "0 0 8px", fontSize: "0.75rem", color: "#9ca3af", textAlign: "center" }}>
-          Zostaniesz przekierowany na stronę płatności Stripe. Kod dostępu otrzymasz emailem.
+        <p style={{ margin: "0 0 16px", fontSize: "0.75rem", color: "#9ca3af", textAlign: "center" }}>
+          Podczas analizy faktur analizuję strukturę pliku, nie gromadzę Twoich danych sprzedażowych.
         </p>
-        <p style={{ margin: "0 0 16px", fontSize: "0.75rem", color: "#6366f1", textAlign: "center" }}>🔒 Analizuję strukturę pliku, nie gromadzę Twoich danych sprzedażowych.</p>
         {showTokenField && (
           <div style={{ borderTop: "1px solid #e0e7ff", paddingTop: 16 }}>
             <p style={{ margin: "0 0 8px", fontSize: "0.82rem", color: "#6b7280", textAlign: "center" }}>Masz już kod dostępu?</p>

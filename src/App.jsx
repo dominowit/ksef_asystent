@@ -377,7 +377,7 @@ export default function GlowaDoksef() {
         </div>
         {!isPaid && fingerprintReady && (
           <button onClick={() => setShowPricing(true)} className="header-btn-small" style={{ position: "absolute", top: 14, right: 16, background: "rgba(255,255,255,0.2)", border: "1.5px solid rgba(255,255,255,0.4)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-            {messageCount < FREE_LIMIT ? `Kup dostęp · ${FREE_LIMIT - messageCount}/${FREE_LIMIT} wiad.` : "⚠️ Limit wyczerpany · Kup dostęp"}
+            {messageCount < FREE_LIMIT ? `${FREE_LIMIT - messageCount}/${FREE_LIMIT} wiad.` : "Kup dostęp"}
           </button>
         )}
         {isPaid && (

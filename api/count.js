@@ -17,9 +17,14 @@ export default async function handler(req, res) {
 
   const { data } = await supabase
     .from("free_usage")
-    .select("message_count")
+    .select("message_count, reset_at")
     .eq("fingerprint", fingerprint)
     .single();
 
-  return res.status(200).json({ count: data?.message_count || 0 });
+  const now = new Date();
+  const resetAt = data?.reset_at ? new Date(data.reset_at) : null;
+  const shouldReset = !resetAt || now > resetAt;
+  const count = shouldReset ? 0 : (data?.message_count || 0);
+
+  return res.status(200).json({ count });
 }

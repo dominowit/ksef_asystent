@@ -186,38 +186,21 @@ export default function GlowaDoksef() {
   useEffect(() => {
     const initFingerprint = async () => {
       try {
-        // Załaduj FingerprintJS ze skryptu CDN
-        await new Promise((resolve, reject) => {
-          if (window.FingerprintJS) { resolve(); return; }
-          const script = document.createElement("script");
-          script.src = "https://openfpcdn.io/fingerprintjs/v4";
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
-        });
-        const fp = await window.FingerprintJS.load();
-        const result = await fp.get();
-        const visitorId = result.visitorId;
-        setFingerprint(visitorId);
-
-        // Pobierz aktualny licznik z backendu
+        // Pobierz ID sesji z serwera (bazuje na IP + user agent)
         const resp = await fetch("/api/count", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fingerprint: visitorId }),
+          body: JSON.stringify({ fingerprint: null }),
         });
         if (resp.ok) {
           const data = await resp.json();
+          setFingerprint(data.fingerprint);
           setMessageCount(data.count || 0);
           if (data.resetAt) setResetAt(new Date(data.resetAt));
         }
         setFingerprintReady(true);
       } catch (e) {
-        console.warn("Fingerprint init failed", e);
-        // Fallback: generuj losowy ID i zapisz w sessionStorage
-        const fallback = sessionStorage.getItem("ksef_fp") || Math.random().toString(36).slice(2);
-        sessionStorage.setItem("ksef_fp", fallback);
-        setFingerprint(fallback);
+        console.warn("Count init failed", e);
         setFingerprintReady(true);
       }
     };

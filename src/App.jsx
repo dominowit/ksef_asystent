@@ -122,7 +122,7 @@ export default function GlowaDoksef() {
   const [messages, setMessages] = useState([{ role: "assistant", content: "onboarding" }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [messageCount, setMessageCount] = useState(0);
+  const [messageCount, setMessageCount] = useState(() => parseInt(localStorage.getItem("ksef_msg_count") || "0"));
   const [showPaywall, setShowPaywall] = useState(false);
   const [showPricing, setShowPricing] = useState(false);
   const [showSafety, setShowSafety] = useState(false);
@@ -190,7 +190,7 @@ export default function GlowaDoksef() {
     if ((!userText && !image) || loading) return;
     if (!userToken && messageCount >= FREE_LIMIT) { setShowPricing(true); return; }
     setInput("");
-    if (!userToken) setMessageCount(c => c + 1);
+    if (!userToken) setMessageCount(c => { const next = c + 1; localStorage.setItem("ksef_msg_count", next); return next; });
     let userMessage;
     if (image) {
       const cb = image.isPdf

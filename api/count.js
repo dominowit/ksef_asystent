@@ -26,5 +26,5 @@ export default async function handler(req, res) {
   const shouldReset = !resetAt || now > resetAt;
   const count = shouldReset ? 0 : (data?.message_count || 0);
 
-  return res.status(200).json({ count });
+  return res.status(200).json({ count, resetAt: shouldReset ? null : data?.reset_at || null });
 }

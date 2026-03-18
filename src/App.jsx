@@ -204,6 +204,9 @@ export default function GlowaDoksef() {
     };
     initFingerprint();
   }, []);
+
+  useEffect(() => {
+    if (showPaywall && paywallRef.current) {
       setTimeout(() => paywallRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
     }
   }, [showPaywall]);

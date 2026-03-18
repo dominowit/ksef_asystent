@@ -264,21 +264,25 @@ export default async function handler(req, res) {
     // Pobierz lub utwórz rekord dla tego fingerprintu
     const { data: fpData } = await supabase
       .from("free_usage")
-      .select("message_count")
+      .select("message_count, reset_at")
       .eq("fingerprint", fingerprint)
       .single();
 
-    const currentCount = fpData?.message_count || 0;
+    const now = new Date();
+    const resetAt = fpData?.reset_at ? new Date(fpData.reset_at) : null;
+    const shouldReset = !resetAt || now > resetAt;
+    const currentCount = shouldReset ? 0 : (fpData?.message_count || 0);
+    const nextResetAt = shouldReset ? new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString() : fpData.reset_at;
 
     if (currentCount >= FREE_MESSAGE_LIMIT) {
-      return res.status(403).json({ error: "limit_reached", message: "Wykorzystałeś bezpłatne 5 wiadomości. Wykup dostęp żeby kontynuować." });
+      return res.status(403).json({ error: "limit_reached", message: "Wykorzystałeś bezpłatne 5 wiadomości na dziś. Wróć jutro lub wykup dostęp." });
     }
 
     // Inkrementuj licznik
     if (fpData) {
-      await supabase.from("free_usage").update({ message_count: currentCount + 1, last_seen: new Date().toISOString() }).eq("fingerprint", fingerprint);
+      await supabase.from("free_usage").update({ message_count: currentCount + 1, last_seen: now.toISOString(), reset_at: nextResetAt }).eq("fingerprint", fingerprint);
     } else {
-      await supabase.from("free_usage").insert({ fingerprint, message_count: 1, last_seen: new Date().toISOString() });
+      await supabase.from("free_usage").insert({ fingerprint, message_count: 1, last_seen: now.toISOString(), reset_at: nextResetAt });
     }
     }
   }

@@ -127,7 +127,7 @@ export default function GlowaDoksef() {
   const [showPricing, setShowPricing] = useState(false);
   const [showSafety, setShowSafety] = useState(false);
   const [page, setPage] = useState("chat");
-  const [userToken, setUserToken] = useState(null);
+  const [userToken, setUserToken] = useState(() => localStorage.getItem("ksef_token") || null);
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const messagesEndRef = useRef(null);
@@ -236,6 +236,7 @@ export default function GlowaDoksef() {
 
   const handleEnterToken = (token) => {
     setUserToken(token);
+    localStorage.setItem("ksef_token", token);
     setShowPaywall(false);
     setShowPricing(false);
     setMessages(prev => [...prev, { role: "assistant", content: "Kod przyjęty — masz pełny dostęp. Czym mogę pomóc?" }]);
@@ -281,7 +282,10 @@ export default function GlowaDoksef() {
           </button>
         )}
         {isPaid && (
-          <a href="https://billing.stripe.com/p/login/cNi4gzcobg0R38C64Ocwg00" target="_blank" rel="noopener noreferrer" style={{ position: "absolute", top: 14, right: 16, background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit", textDecoration: "none" }}>Zarządzaj subskrypcją</a>
+          <div style={{ position: "absolute", top: 14, right: 16, display: "flex", gap: 6 }}>
+            <a href="https://billing.stripe.com/p/login/cNi4gzcobg0R38C64Ocwg00" target="_blank" rel="noopener noreferrer" className="header-btn-small" style={{ background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit", textDecoration: "none" }}>Zarządzaj subskrypcją</a>
+            <button onClick={() => { setUserToken(null); localStorage.removeItem("ksef_token"); }} className="header-btn-small" style={{ background: "rgba(255,255,255,0.1)", border: "1.5px solid rgba(255,255,255,0.2)", borderRadius: 20, padding: "6px 10px", color: "rgba(255,255,255,0.7)", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit" }}>Wyloguj</button>
+          </div>
         )}
         <img src="/logo.png" alt="Głowa do KSeF" style={{ width: 147, height: 147, objectFit: "contain", position: "absolute", left: "50%", transform: "translateX(-50%)", top: "30%", marginTop: -73, pointerEvents: "none" }} />
         <div style={{ height: 120, display: "block" }} />

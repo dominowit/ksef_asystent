@@ -2,6 +2,7 @@
 // Chroni klucz API, liczy wiadomości, obsługuje plany freemium/płatne
 
 import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
 
 const FREE_MESSAGE_LIMIT = 5;
 const PLAN_LIMITS = {
@@ -239,7 +240,18 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  const { messages, userToken, fingerprint, hasImage } = req.body;
+  const { messages, userToken, hasImage } = req.body;
+
+  // Generuj fingerprint po stronie serwera z IP + user agent
+  const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim()
+    || req.headers["x-real-ip"]
+    || req.socket?.remoteAddress
+    || "unknown";
+  const ua = req.headers["user-agent"] || "unknown";
+  const fingerprint = crypto
+    .createHash("sha256")
+    .update(`${ip}::${ua}`)
+    .digest("hex");
 
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: "Brak wiadomości" });
@@ -256,10 +268,7 @@ export default async function handler(req, res) {
 
   // Freemium: sprawdź licznik po stronie serwera
   if (!isPaid) {
-    if (!fingerprint) {
-      // Brak fingerprintu = FingerprintJS nie zdążył się załadować, przepuszczamy
-      // (edge case — normalnie fingerprint zawsze jest wysyłany)
-    } else {
+    {
 
     // Pobierz lub utwórz rekord dla tego fingerprintu
     const { data: fpData } = await supabase

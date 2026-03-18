@@ -270,7 +270,7 @@ export default function GlowaDoksef() {
       {showPricing && <PricingModal onClose={() => setShowPricing(false)} onEnterToken={handleEnterToken} showTokenField={true} />}
       {showSafety && <SafetyModal onClose={() => setShowSafety(false)} />}
 
-      <div style={{ width: "100%", background: "linear-gradient(135deg, #3730a3, #4f46e5, #6366f1)", padding: "20px 20px 16px", textAlign: "center", position: "sticky", top: 0, zIndex: 10, boxShadow: "0 4px 20px rgba(79,70,229,0.25)", overflow: "visible" }}>
+      <div style={{ width: "100%", background: "linear-gradient(135deg, #4c0519, #881337, #be123c)", padding: "20px 20px 16px", textAlign: "center", position: "sticky", top: 0, zIndex: 10, boxShadow: "0 4px 20px rgba(79,70,229,0.25)", overflow: "visible" }}>
         <div style={{ position: "absolute", top: 14, left: 16, display: "flex", flexDirection: "column", gap: 6 }}>
           <button onClick={() => setShowSafety(true)} className="header-btn-small" style={{ background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit" }}>🛡️ Bezpieczeństwo</button>
           <a href="https://ksef.systems" target="_blank" rel="noopener noreferrer" className="header-btn-small" style={{ background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit", textDecoration: "none", textAlign: "center" }}>🟢 Status MF</a>
@@ -307,7 +307,7 @@ export default function GlowaDoksef() {
         {messages.map((msg, i) => (
           <div key={i} ref={i === messages.length - 1 && msg.role === "assistant" ? lastMsgRef : null} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", animation: "fadeIn 0.35s ease" }}>
             {msg.role === "assistant" && (
-              <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #4f46e5, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem", flexShrink: 0, marginRight: 10, marginTop: 4, boxShadow: "0 2px 8px rgba(99,102,241,0.3)" }}>📄</div>
+              <div style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", flexShrink: 0, marginRight: 10, marginTop: 4, boxShadow: "0 2px 8px rgba(99,102,241,0.3)" }}><img src="/avatar.png" alt="bot" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
             )}
             <div style={{ maxWidth: "78%", background: msg.role === "user" ? "linear-gradient(135deg, #4f46e5, #6366f1)" : "white", color: msg.role === "user" ? "white" : "#1e1b4b", borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px", padding: "12px 16px", fontSize: "0.88rem", lineHeight: 1.65, boxShadow: msg.role === "user" ? "0 4px 12px rgba(79,70,229,0.3)" : "0 2px 12px rgba(0,0,0,0.07)" }}>
               {msg.hasImage && msg.imagePreview && <img src={msg.imagePreview} alt="faktura" style={{ maxWidth: "100%", borderRadius: 8, marginBottom: 8, display: "block" }} />}
@@ -327,7 +327,7 @@ export default function GlowaDoksef() {
         ))}
         {loading && (
           <div style={{ display: "flex", justifyContent: "flex-start", animation: "fadeIn 0.3s ease" }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #4f46e5, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem", flexShrink: 0, marginRight: 10, boxShadow: "0 2px 8px rgba(99,102,241,0.3)" }}>📄</div>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", flexShrink: 0, marginRight: 10, boxShadow: "0 2px 8px rgba(99,102,241,0.3)" }}><img src="/avatar.png" alt="bot" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
             <div style={{ background: "white", borderRadius: "18px 18px 18px 4px", padding: "12px 16px", boxShadow: "0 2px 12px rgba(0,0,0,0.07)" }}>
               <TypingIndicator />
             </div>

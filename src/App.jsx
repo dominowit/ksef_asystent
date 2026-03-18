@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import TermsPage from "./TermsPage.jsx";
 import PrivacyPage from "./PrivacyPage.jsx";
 
@@ -46,6 +46,37 @@ const PLANS = [
   { id: "small", name: "Mała firma", price: "89 zł/mies.", desc: "Do 5 użytkowników • analiza faktur • 600 wiadomości/mies.", link: "https://buy.stripe.com/9B600j2NB7ul6kO8cWcwg01" },
   { id: "business", name: "Firma", price: "199 zł/mies.", desc: "Do 25 użytkowników • analiza faktur • 2000 wiadomości/mies. • priorytetowe wsparcie", link: "https://buy.stripe.com/14AfZh3RFbKBaB41Oycwg02" },
 ];
+
+const PaywallChatMessage = ({ onShowPlans }) => (
+  <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", borderRadius: "18px 18px 18px 4px", padding: "20px 20px 16px", color: "white", boxShadow: "0 4px 20px rgba(79,70,229,0.35)", maxWidth: "78%" }}>
+    <p style={{ margin: "0 0 6px", fontSize: "1.05rem", fontWeight: 700 }}>Głowa do KSeF potrzebuje chwili odpoczynku... ☕</p>
+    <p style={{ margin: "0 0 14px", fontSize: "0.85rem", color: "#c7d2fe", lineHeight: 1.6 }}>
+      Twoje darmowe wsparcie na dziś się wyczerpało. Jako mały, niezależny projekt musimy dbać o serwery, aby każdy polski przedsiębiorca mógł otrzymać jasną odpowiedź w tym gorącym czasie.
+    </p>
+    <p style={{ margin: "0 0 10px", fontSize: "0.85rem", color: "#e0e7ff", fontWeight: 600 }}>Odblokuj pełne możliwości i zyskaj święty spokój:</p>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
+      {[
+        "Pytać bez limitów o każdy błąd, kod i zawiły przepis.",
+        "Analizować faktury – prześlij plik, a ja sprawdzę, czy nie ma w nim błędów, zanim wyślesz go do KSeF.",
+        "Mieć dostęp do eksperckiej wiedzy 24/7 – bez czekania na infolinię MF.",
+        "Wesprzeć rozwój polskiego narzędzia stworzonego dla firm, a nie dla urzędów.",
+      ].map((item, i) => (
+        <div key={i} style={{ display: "flex", gap: 8, fontSize: "0.83rem", color: "#ddd6fe", lineHeight: 1.55 }}>
+          <span style={{ flexShrink: 0 }}>✅</span>
+          <span>{item}</span>
+        </div>
+      ))}
+    </div>
+    <div style={{ display: "flex", justifyContent: "center" }}>
+      <button
+        onClick={onShowPlans}
+        style={{ background: "linear-gradient(135deg, #6366f1, #4f46e5)", color: "white", border: "none", borderRadius: 14, padding: "12px 28px", fontWeight: 700, fontSize: "0.95rem", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 4px 14px rgba(99,102,241,0.5)", letterSpacing: "0.01em" }}
+      >
+        Zobacz plany →
+      </button>
+    </div>
+  </div>
+);
 
 const PricingModal = ({ onClose, onEnterToken, showTokenField }) => {
   const [token, setToken] = useState("");
@@ -122,7 +153,8 @@ export default function GlowaDoksef() {
   const [messages, setMessages] = useState([{ role: "assistant", content: "onboarding" }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [messageCount, setMessageCount] = useState(() => parseInt(localStorage.getItem("ksef_msg_count") || "0"));
+  const [messageCount, setMessageCount] = useState(0);
+  const [fingerprint, setFingerprint] = useState(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [showPricing, setShowPricing] = useState(false);
   const [showSafety, setShowSafety] = useState(false);
@@ -147,7 +179,31 @@ export default function GlowaDoksef() {
   }, [messages, loading]);
 
   useEffect(() => {
-    if (showPaywall && paywallRef.current) {
+    // Generuj fingerprint i pobierz aktualny licznik z serwera
+    const initFingerprint = async () => {
+      try {
+        const FingerprintJS = await import("https://openfpcdn.io/fingerprintjs/v4/esm.min.js");
+        const fp = await FingerprintJS.load();
+        const result = await fp.get();
+        const visitorId = result.visitorId;
+        setFingerprint(visitorId);
+
+        // Pobierz aktualny licznik z backendu
+        const resp = await fetch("/api/count", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fingerprint: visitorId }),
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          setMessageCount(data.count || 0);
+        }
+      } catch (e) {
+        console.warn("Fingerprint init failed", e);
+      }
+    };
+    initFingerprint();
+  }, []);
       setTimeout(() => paywallRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
     }
   }, [showPaywall]);
@@ -188,9 +244,12 @@ export default function GlowaDoksef() {
   const sendMessage = async (text) => {
     const userText = text || input.trim();
     if ((!userText && !image) || loading) return;
-    if (!userToken && messageCount >= FREE_LIMIT) { setShowPricing(true); return; }
+    if (!userToken && messageCount >= FREE_LIMIT) {
+      setMessages(prev => [...prev, { role: "assistant", content: "paywall" }]);
+      return;
+    }
     setInput("");
-    if (!userToken) setMessageCount(c => { const next = c + 1; localStorage.setItem("ksef_msg_count", next); return next; });
+    if (!userToken) setMessageCount(c => c + 1);
     let userMessage;
     if (image) {
       const cb = image.isPdf
@@ -211,11 +270,11 @@ export default function GlowaDoksef() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: apiMessages, userToken: userToken || null, messageCount, hasImage: !!image }),
+        body: JSON.stringify({ messages: apiMessages, userToken: userToken || null, fingerprint: fingerprint || null, hasImage: !!image }),
       });
       const data = await response.json();
       if (response.status === 403) {
-        if (data.error === "limit_reached") setShowPricing(true);
+        if (data.error === "limit_reached") { setMessages(prev => [...prev, { role: "assistant", content: "paywall" }]); }
         else if (data.error === "upgrade_required") { setMessages(prev => [...prev, { role: "assistant", content: "Analiza faktur dostępna jest w płatnych planach." }]); setShowPaywall(true); }
         else setMessages(prev => [...prev, { role: "assistant", content: data.message || "Brak dostępu." }]);
         setLoading(false); return;
@@ -313,7 +372,7 @@ export default function GlowaDoksef() {
             {msg.role === "assistant" && (
               <div style={{ width: 42, height: 42, borderRadius: "50%", overflow: "hidden", flexShrink: 0, marginRight: 10, marginTop: 4, boxShadow: "0 2px 8px rgba(99,102,241,0.3)" }}><img src="/avatar.png" alt="bot" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
             )}
-            <div style={{ maxWidth: "78%", background: msg.role === "user" ? "linear-gradient(135deg, #4f46e5, #6366f1)" : "white", color: msg.role === "user" ? "white" : "#1e1b4b", borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px", padding: "12px 16px", fontSize: "0.88rem", lineHeight: 1.65, boxShadow: msg.role === "user" ? "0 4px 12px rgba(79,70,229,0.3)" : "0 2px 12px rgba(0,0,0,0.07)" }}>
+            <div style={{ maxWidth: "78%", background: msg.content === "paywall" ? "transparent" : msg.role === "user" ? "linear-gradient(135deg, #4f46e5, #6366f1)" : "white", color: msg.role === "user" ? "white" : "#1e1b4b", borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px", padding: msg.content === "paywall" ? "0" : "12px 16px", fontSize: "0.88rem", lineHeight: 1.65, boxShadow: msg.content === "paywall" ? "none" : msg.role === "user" ? "0 4px 12px rgba(79,70,229,0.3)" : "0 2px 12px rgba(0,0,0,0.07)" }}>
               {msg.hasImage && msg.imagePreview && <img src={msg.imagePreview} alt="faktura" style={{ maxWidth: "100%", borderRadius: 8, marginBottom: 8, display: "block" }} />}
               {msg.role === "assistant" && msg.content === "onboarding" ? (
                 <div>
@@ -326,6 +385,8 @@ export default function GlowaDoksef() {
                   <p style={{ margin: 0, fontSize: "0.83rem", color: "#6b7280" }}>Każda sesja jest niezależna. Co Cię sprowadza?</p>
                   <p style={{ margin: "8px 0 0", fontSize: "0.78rem", color: "#9ca3af" }}>Problemy techniczne? Napisz na <a href="mailto:kontakt@glowadoksef.pl" style={{ color: "#6366f1", textDecoration: "none" }}>kontakt@glowadoksef.pl</a></p>
                 </div>
+              ) : msg.role === "assistant" && msg.content === "paywall" ? (
+                <PaywallChatMessage onShowPlans={() => setShowPricing(true)} />
               ) : msg.role === "assistant" ? formatMessage(msg.content) : msg.content}
             </div>
           </div>

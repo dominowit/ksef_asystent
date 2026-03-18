@@ -30,7 +30,7 @@ async function verifyToken(token) {
   return data.plan; // "solo" | "small" | "firma"
 }
 
-const SYSTEM_PROMPT = `Jesteś Głową do KSeF — pomagasz małym firmom wdrożyć e-faktury i rozumieć przepisy. Jesteś po stronie użytkownika, nie systemu. Widzisz absurdy KSeF i nie udajesz, że ich nie ma.
+const SYSTEM_PROMPT = `Jesteś Asystentem KSeF — pomagasz małym firmom wdrożyć e-faktury i rozumieć przepisy. Jesteś po stronie użytkownika, nie systemu. Widzisz absurdy KSeF i nie udajesz, że ich nie ma.
 
 WAŻNE: Twoja wiedza o KSeF i przepisach jest aktualna na marzec 2026.
 
@@ -239,38 +239,61 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  const { messages, userToken, messageCount, hasImage } = req.body;
+  const { messages, userToken, fingerprint, hasImage } = req.body;
 
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: "Brak wiadomości" });
   }
 
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY
+  );
+
   // Sprawdź plan użytkownika w Supabase
   const plan = await verifyToken(userToken);
   const isPaid = plan !== null;
 
-  // Freemium: blokuj po 5 wiadomościach
-  if (!isPaid && messageCount >= FREE_MESSAGE_LIMIT) {
-    return res.status(403).json({
-      error: "limit_reached",
-      message: "Wykorzystałeś bezpłatne 5 wiadomości. Wykup dostęp żeby kontynuować.",
-    });
+  // Freemium: sprawdź licznik po stronie serwera
+  if (!isPaid) {
+    if (!fingerprint) {
+      return res.status(403).json({ error: "limit_reached", message: "Wykorzystałeś bezpłatne 5 wiadomości. Wykup dostęp żeby kontynuować." });
+    }
+
+    // Pobierz lub utwórz rekord dla tego fingerprintu
+    const { data: fpData } = await supabase
+      .from("free_usage")
+      .select("message_count")
+      .eq("fingerprint", fingerprint)
+      .single();
+
+    const currentCount = fpData?.message_count || 0;
+
+    if (currentCount >= FREE_MESSAGE_LIMIT) {
+      return res.status(403).json({ error: "limit_reached", message: "Wykorzystałeś bezpłatne 5 wiadomości. Wykup dostęp żeby kontynuować." });
+    }
+
+    // Inkrementuj licznik
+    if (fpData) {
+      await supabase.from("free_usage").update({ message_count: currentCount + 1, last_seen: new Date().toISOString() }).eq("fingerprint", fingerprint);
+    } else {
+      await supabase.from("free_usage").insert({ fingerprint, message_count: 1, last_seen: new Date().toISOString() });
+    }
   }
 
-  // Płatne plany: sprawdź limit wiadomości
-  if (isPaid && plan in PLAN_LIMITS && messageCount >= PLAN_LIMITS[plan]) {
-    return res.status(403).json({
-      error: "plan_limit_reached",
-      message: `Wykorzystałeś limit wiadomości w planie ${plan}. Skontaktuj się z nami żeby przejść na wyższy plan.`,
-    });
+  // Płatne plany: sprawdź limit wiadomości (monthly reset można dodać później)
+  if (isPaid && plan in PLAN_LIMITS) {
+    const { data: tokenData } = await supabase.from("paid_tokens").select("monthly_count, count_reset_at").eq("token", userToken.toUpperCase()).single();
+    const monthlyCount = tokenData?.monthly_count || 0;
+    if (monthlyCount >= PLAN_LIMITS[plan]) {
+      return res.status(403).json({ error: "plan_limit_reached", message: `Wykorzystałeś limit wiadomości w planie ${plan}. Skontaktuj się z nami żeby przejść na wyższy plan.` });
+    }
+    await supabase.from("paid_tokens").update({ monthly_count: monthlyCount + 1 }).eq("token", userToken.toUpperCase());
   }
 
   // Blokuj zdjęcia na darmowym planie
   if (!isPaid && hasImage) {
-    return res.status(403).json({
-      error: "upgrade_required",
-      message: "Analiza faktur dostępna tylko w płatnych planach.",
-    });
+    return res.status(403).json({ error: "upgrade_required", message: "Analiza faktur dostępna tylko w płatnych planach." });
   }
 
   // Ogranicz historię do ostatnich 10 wiadomości

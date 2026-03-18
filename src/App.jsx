@@ -105,9 +105,10 @@ const PricingModal = ({ onClose, onEnterToken, showTokenField }) => {
         <a href={PLANS.find(p => p.id === selectedPlan)?.link} target="_blank" rel="noopener noreferrer" style={{ display: "block", width: "100%", background: "#4f46e5", color: "white", borderRadius: 12, padding: "12px", fontWeight: 700, fontSize: "0.95rem", textAlign: "center", textDecoration: "none", marginBottom: 8 }}>
           Zapłać — {PLANS.find(p => p.id === selectedPlan)?.price}
         </a>
-        <p style={{ margin: "0 0 16px", fontSize: "0.75rem", color: "#9ca3af", textAlign: "center" }}>
+        <p style={{ margin: "0 0 8px", fontSize: "0.75rem", color: "#9ca3af", textAlign: "center" }}>
           Zostaniesz przekierowany na stronę płatności Stripe. Kod dostępu otrzymasz emailem.
         </p>
+        <p style={{ margin: "0 0 16px", fontSize: "0.75rem", color: "#6366f1", textAlign: "center" }}>🔒 Analizuję strukturę pliku, nie gromadzę Twoich danych sprzedażowych.</p>
         {showTokenField && (
           <div style={{ borderTop: "1px solid #e0e7ff", paddingTop: 16 }}>
             <p style={{ margin: "0 0 8px", fontSize: "0.82rem", color: "#6b7280", textAlign: "center" }}>Masz już kod dostępu?</p>
@@ -142,8 +143,8 @@ const SafetyModal = ({ onClose }) => (
           <strong style={{ color: "#3730a3" }}>3. To nie terapia</strong>
           <p style={{ margin: "4px 0 0" }}>Chętnie wysłucham i pomogę się uspokoić — ale w przypadku poważnego kryzysu emocjonalnego skorzystaj z pomocy specjalisty.</p>
         </div>
-        <div style={{ background: "#fee2e2", borderRadius: 12, padding: "12px 14px" }}>
-          <strong style={{ color: "#991b1b" }}>4. Nigdy nie podawaj haseł ani tokenów</strong>
+        <div style={{ background: "#f5f3ff", borderRadius: 12, padding: "12px 14px" }}>
+          <strong style={{ color: "#3730a3" }}>4. Nigdy nie podawaj haseł ani tokenów</strong>
           <p style={{ margin: "4px 0 0" }}>Nie podawaj mi haseł ani tokenów autoryzacyjnych do bramki Ministerstwa Finansów.</p>
         </div>
       </div>

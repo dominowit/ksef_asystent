@@ -47,7 +47,7 @@ const PLANS = [
   { id: "business", name: "Firma", price: "199 zł/mies.", desc: "Do 25 użytkowników • analiza faktur • 2000 wiadomości/mies. • priorytetowe wsparcie", link: "https://buy.stripe.com/14AfZh3RFbKBaB41Oycwg02" },
 ];
 
-const PaywallChatMessage = ({ onShowPlans }) => (
+const PaywallChatMessage = ({ onShowPlans, resetText }) => (
   <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", borderRadius: "18px 18px 18px 4px", padding: "20px 20px 16px", color: "white", boxShadow: "0 4px 20px rgba(79,70,229,0.35)", maxWidth: "78%" }}>
     <p style={{ margin: "0 0 6px", fontSize: "1.05rem", fontWeight: 700 }}>Głowa do KSeF potrzebuje chwili odpoczynku... ☕</p>
     <p style={{ margin: "0 0 14px", fontSize: "0.85rem", color: "#c7d2fe", lineHeight: 1.6 }}>
@@ -67,6 +67,9 @@ const PaywallChatMessage = ({ onShowPlans }) => (
         </div>
       ))}
     </div>
+    {resetText && (
+      <p style={{ margin: "0 0 14px", fontSize: "0.75rem", color: "#a5b4fc", textAlign: "center" }}>🕐 {resetText}</p>
+    )}
     <div style={{ display: "flex", justifyContent: "center" }}>
       <button
         onClick={onShowPlans}
@@ -154,7 +157,9 @@ export default function GlowaDoksef() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
+  const [resetAt, setResetAt] = useState(null);
   const [fingerprint, setFingerprint] = useState(null);
+  const [fingerprintReady, setFingerprintReady] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [showPricing, setShowPricing] = useState(false);
   const [showSafety, setShowSafety] = useState(false);
@@ -204,13 +209,16 @@ export default function GlowaDoksef() {
         if (resp.ok) {
           const data = await resp.json();
           setMessageCount(data.count || 0);
+          if (data.resetAt) setResetAt(new Date(data.resetAt));
         }
+        setFingerprintReady(true);
       } catch (e) {
         console.warn("Fingerprint init failed", e);
         // Fallback: generuj losowy ID i zapisz w sessionStorage
         const fallback = sessionStorage.getItem("ksef_fp") || Math.random().toString(36).slice(2);
         sessionStorage.setItem("ksef_fp", fallback);
         setFingerprint(fallback);
+        setFingerprintReady(true);
       }
     };
     initFingerprint();
@@ -325,6 +333,16 @@ export default function GlowaDoksef() {
 
   const isPaid = !!userToken;
   const remainingFree = Math.max(0, FREE_LIMIT - messageCount);
+  const resetText = (() => {
+    if (!resetAt) return null;
+    const now = new Date();
+    if (now > resetAt) return null;
+    const diff = resetAt - now;
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    if (h > 0) return `Limit odnowi się za ${h} godz. ${m} min.`;
+    return `Limit odnowi się za ${m} min.`;
+  })();
 
   if (page === "terms") return <TermsPage onBack={() => setPage("chat")} />;
   if (page === "privacy") return <PrivacyPage onBack={() => setPage("chat")} />;
@@ -357,7 +375,7 @@ export default function GlowaDoksef() {
           <button onClick={() => setShowSafety(true)} className="header-btn-small" style={{ background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit" }}>🛡️ Bezpieczeństwo</button>
           <a href="https://ksef.systems" target="_blank" rel="noopener noreferrer" className="header-btn-small" style={{ background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit", textDecoration: "none", textAlign: "center" }}>🟢 Status MF</a>
         </div>
-        {!isPaid && (
+        {!isPaid && fingerprintReady && (
           <button onClick={() => setShowPricing(true)} className="header-btn-small" style={{ position: "absolute", top: 14, right: 16, background: "rgba(255,255,255,0.2)", border: "1.5px solid rgba(255,255,255,0.4)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
             {remainingFree > 0 ? `Kup dostęp · ${remainingFree}/${FREE_LIMIT} wiad.` : "⚠️ Limit wyczerpany"}
           </button>
@@ -408,7 +426,7 @@ export default function GlowaDoksef() {
                   <p style={{ margin: "8px 0 0", fontSize: "0.78rem", color: "#9ca3af" }}>Problemy techniczne? Napisz na <a href="mailto:kontakt@glowadoksef.pl" style={{ color: "#6366f1", textDecoration: "none" }}>kontakt@glowadoksef.pl</a></p>
                 </div>
               ) : msg.role === "assistant" && msg.content === "paywall" ? (
-                <PaywallChatMessage onShowPlans={() => setShowPricing(true)} />
+                <PaywallChatMessage onShowPlans={() => setShowPricing(true)} resetText={resetText} />
               ) : msg.role === "assistant" ? formatMessage(msg.content) : msg.content}
             </div>
           </div>

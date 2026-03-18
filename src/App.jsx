@@ -247,6 +247,7 @@ export default function GlowaDoksef() {
   const sendMessage = async (text) => {
     const userText = text || input.trim();
     if ((!userText && !image) || loading) return;
+    if (!userToken && !fingerprint) return; // czekaj na fingerprint
     if (!userToken && messageCount >= FREE_LIMIT) {
       setMessages(prev => [...prev, { role: "assistant", content: "paywall" }]);
       return;
@@ -284,6 +285,13 @@ export default function GlowaDoksef() {
       }
       if (!response.ok) { setMessages(prev => [...prev, { role: "assistant", content: "Problem z połączeniem. Spróbuj ponownie." }]); setLoading(false); return; }
       setMessages(prev => [...prev, { role: "assistant", content: data.reply }]);
+      // Jeśli to była ostatnia darmowa wiadomość, pokaż paywall zaraz po odpowiedzi
+      if (!userToken) {
+        const newCount = messageCount + 1;
+        if (newCount >= FREE_LIMIT) {
+          setMessages(prev => [...prev, { role: "assistant", content: "paywall" }]);
+        }
+      }
     } catch {
       setMessages(prev => [...prev, { role: "assistant", content: "Problem z połączeniem. Sprawdź internet i spróbuj ponownie." }]);
     } finally {
@@ -429,7 +437,7 @@ export default function GlowaDoksef() {
           <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" style={{ display: "none" }} onChange={handleImageUpload} />
           <button onClick={() => fileInputRef.current?.click()} title={isPaid ? "Wyślij fakturę do analizy" : "Dostępne w płatnych planach"} style={{ background: isPaid ? "#f5f3ff" : "#f9fafb", border: "1.5px solid " + (isPaid ? "#c7d2fe" : "#e5e7eb"), borderRadius: 12, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: isPaid ? "pointer" : "not-allowed", flexShrink: 0, fontSize: "1rem", color: isPaid ? "#6366f1" : "#d1d5db" }}>📎</button>
           <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKey} placeholder={isPaid ? "Napisz pytanie lub wyślij zdjęcie faktury..." : "Napisz pytanie o KSeF, błąd, problem..."} disabled={loading} rows={1} style={{ flex: 1, border: "none", background: "transparent", resize: "none", fontSize: "0.9rem", fontFamily: "inherit", color: "#1e1b4b", padding: "6px 0", lineHeight: 1.5, maxHeight: 120, overflowY: "auto" }} onInput={(e) => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }} />
-          <button className="send-btn" onClick={() => sendMessage()} disabled={loading || (!input.trim() && !image)} style={{ background: (loading || (!input.trim() && !image)) ? "#c7d2fe" : "#4f46e5", color: "white", border: "none", borderRadius: 14, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", cursor: (loading || (!input.trim() && !image)) ? "not-allowed" : "pointer", transition: "background 0.2s", flexShrink: 0, fontSize: "1rem" }}>{loading ? "⏳" : "↑"}</button>
+          <button className="send-btn" onClick={() => sendMessage()} disabled={loading || (!input.trim() && !image) || (!userToken && !fingerprint)} style={{ background: (loading || (!input.trim() && !image) || (!userToken && !fingerprint)) ? "#c7d2fe" : "#4f46e5", color: "white", border: "none", borderRadius: 14, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", cursor: (loading || (!input.trim() && !image) || (!userToken && !fingerprint)) ? "not-allowed" : "pointer", transition: "background 0.2s", flexShrink: 0, fontSize: "1rem" }}>{loading ? "⏳" : "↑"}</button>
         </div>
         <p style={{ textAlign: "center", margin: "8px 0 0", fontSize: "0.72rem", color: "#a5b4fc" }}>AI może generować błędy. Zawsze weryfikuj ważne faktury z księgowością.</p>
         <p style={{ textAlign: "center", margin: "6px 0 0", fontSize: "0.72rem" }}>

@@ -257,8 +257,9 @@ export default async function handler(req, res) {
   // Freemium: sprawdź licznik po stronie serwera
   if (!isPaid) {
     if (!fingerprint) {
-      return res.status(403).json({ error: "limit_reached", message: "Wykorzystałeś bezpłatne 5 wiadomości. Wykup dostęp żeby kontynuować." });
-    }
+      // Brak fingerprintu = FingerprintJS nie zdążył się załadować, przepuszczamy
+      // (edge case — normalnie fingerprint zawsze jest wysyłany)
+    } else {
 
     // Pobierz lub utwórz rekord dla tego fingerprintu
     const { data: fpData } = await supabase
@@ -278,6 +279,7 @@ export default async function handler(req, res) {
       await supabase.from("free_usage").update({ message_count: currentCount + 1, last_seen: new Date().toISOString() }).eq("fingerprint", fingerprint);
     } else {
       await supabase.from("free_usage").insert({ fingerprint, message_count: 1, last_seen: new Date().toISOString() });
+    }
     }
   }
 

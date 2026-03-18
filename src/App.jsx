@@ -263,7 +263,6 @@ export default function GlowaDoksef() {
       return;
     }
     setInput("");
-    if (!userToken) setMessageCount(c => c + 1);
     let userMessage;
     if (image) {
       const cb = image.isPdf
@@ -295,6 +294,8 @@ export default function GlowaDoksef() {
       }
       if (!response.ok) { setMessages(prev => [...prev, { role: "assistant", content: "Problem z połączeniem. Spróbuj ponownie." }]); setLoading(false); return; }
       setMessages(prev => [...prev, { role: "assistant", content: data.reply }]);
+      // Inkrementuj licznik dopiero po udanej odpowiedzi
+      if (!userToken) setMessageCount(c => c + 1);
       // Jeśli to była ostatnia darmowa wiadomość, pokaż paywall zaraz po odpowiedzi
       if (!userToken) {
         const newCount = messageCount + 1;

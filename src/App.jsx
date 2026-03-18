@@ -107,7 +107,7 @@ const PricingModal = ({ onClose, onEnterToken, showTokenField }) => {
           Zapłać — {PLANS.find(p => p.id === selectedPlan)?.price}
         </a>
         <p style={{ margin: "0 0 16px", fontSize: "0.75rem", color: "#9ca3af", textAlign: "center" }}>
-          Podczas analizy faktur analizuję strukturę pliku, nie gromadzę Twoich danych sprzedażowych.
+          Zostaniesz przekierowany na stronę płatności Stripe. Kod dostępu otrzymasz emailem.
         </p>
         {showTokenField && (
           <div style={{ borderTop: "1px solid #e0e7ff", paddingTop: 16 }}>

@@ -67,19 +67,30 @@ Zawsze miej świadomość tych granic i stosuj je naturalnie, bez nadmiernego po
 ## Wiedza o KSeF
 
 ### PODSTAWY
-- KSeF (Krajowy System e-Faktur) to rządowy system do wystawiania i odbierania faktur w formacie XML (FA(2))
+- KSeF (Krajowy System e-Faktur) to rządowy system do wystawiania i odbierania faktur w formacie XML (FA(3))
+- Aktualny format faktury to FA(3) — obowiązuje od 1 lutego 2026. FA(2) jest już nieaktualny.
 - Obowiązek dla czynnych podatników VAT: od 1 lutego 2026 (firmy powyżej 200 mln zł obrotu) i od 1 kwietnia 2026 (pozostałe firmy z VAT)
-- Firmy zwolnione z VAT: obowiązek od 1 stycznia 2027
+- Podatnicy zwolnieni z VAT: obowiązek od 1 kwietnia 2026 — z wyjątkiem: jeśli łączna wartość sprzedaży na fakturach nie przekracza 10 000 zł miesięcznie, mogą wystawiać faktury poza KSeF do końca 2026 r.
+- UWAGA na próg 10 000 zł: jeśli w danym miesiącu sprzedaż przekroczy 10 000 zł, obowiązek KSeF powstaje natychmiast i trwa nawet jeśli w kolejnym miesiącu sprzedaż spadnie poniżej progu
 - Podatnicy zagraniczni bez polskiego NIP: na razie brak obowiązku
+- Kary administracyjne (z art. 106ni): wchodzą dopiero od 1 stycznia 2027 r. — w 2026 r. nie są stosowane, ale odpowiedzialność karnoskarbowa nadal istnieje
+- Nota korygująca: zlikwidowana od 1 lutego 2026. Błędy w fakturze poprawia się wyłącznie fakturą korygującą w KSeF.
+- Logowanie do KSeF: od 14 lutego 2026 można logować się przez aplikację mObywatel
 
 ### KLUCZOWE PRZEPISY
 - Ustawa z 29 października 2021 r. o zmianie ustawy o VAT (wprowadzenie KSeF)
-- Rozporządzenie Ministerstwa Finansów w sprawie struktury logicznej FA(2)
+- Rozporządzenie Ministerstwa Finansów w sprawie struktury logicznej FA(3)
 - Ustawa z 8 listopada 2022 r. o KSeF
 - Nowelizacja z 2024 r. — przesunięcie terminu i zmiany techniczne
 
-### OBOWIĄZKOWE POLA FAKTURY FA(2)
-NIP wystawcy i nabywcy, data wystawienia i sprzedaży, numer faktury, nazwa towaru lub usługi, cena jednostkowa, ilość, wartość netto, stawka i kwota VAT, kwota należności ogółem, sposób i termin płatności, numer rachunku bankowego (od określonych kwot).
+### OBOWIĄZKOWE POLA FAKTURY FA(3)
+NIP wystawcy i nabywcy, data wystawienia i sprzedaży, numer faktury, nazwa towaru lub usługi (do 512 znaków), cena jednostkowa, ilość, wartość netto, stawka i kwota VAT, kwota należności ogółem, sposób i termin płatności, numer rachunku bankowego (do 34 znaków, od określonych kwot).
+
+Nowości w FA(3) względem FA(2):
+- Możliwość dodawania załączników do faktury
+- Nowy typ kontrahenta: pracownik
+- Pole nazwy towaru/usługi rozszerzone z 256 do 512 znaków
+- Format numeru rachunku bankowego zmieniony do 34 znaków
 
 ### KODY BŁĘDÓW API KSEF — TŁUMACZENIE NA POLSKI
 
@@ -97,7 +108,7 @@ HTTP / Ogólne:
 Kody KSeF (ExceptionDetailType):
 - KSeF-00001 — nieprawidłowy NIP wystawcy; zweryfikuj NIP na białej liście podatników VAT
 - KSeF-00002 — nieprawidłowy NIP nabywcy; sprawdź czy nabywca jest aktywnym podatnikiem
-- KSeF-00003 — faktura odrzucona przez walidator schematu FA(2); sprawdź strukturę XML
+- KSeF-00003 — faktura odrzucona przez walidator schematu FA(3); sprawdź strukturę XML
 - KSeF-00010 — brak wymaganego pola w fakturze; uzupełnij brakujące dane
 - KSeF-00012 — nieprawidłowy format daty (wymagany: YYYY-MM-DD)
 - KSeF-00020 — duplikat numeru faktury; zmień numer faktury
@@ -106,24 +117,31 @@ Kody KSeF (ExceptionDetailType):
 - KSeF-00200 — przekroczono limit rozmiaru faktury (max 5 MB dla pojedynczej faktury)
 
 Błędy schematu XML:
-- "schema validation failed" — faktura niezgodna ze schematem FA(2); użyj walidatora MF lub środowiska testowego
+- "schema validation failed" — faktura niezgodna ze schematem FA(3); użyj walidatora MF lub środowiska testowego
 - "unexpected element" — w pliku XML pojawia się pole którego schemat nie przewiduje
-- "missing required element" — brak obowiązkowego pola; sprawdź listę wymaganych pól FA(2)
+- "missing required element" — brak obowiązkowego pola; sprawdź listę wymaganych pól FA(3)
 - "invalid date format" — data w złym formacie; musi być YYYY-MM-DD
 
-### TRYB AWARYJNY KSEF — PROCEDURA KROK PO KROKU
+### TRYBY PRACY KSeF — WAŻNE ROZRÓŻNIENIE
 
-Tryb awaryjny aktywuje się gdy system MF jest niedostępny nieprzerwanie przez ponad 4 godziny.
+Są trzy tryby — nie mylić ich ze sobą:
 
-Jak postępować:
-1. Sprawdź status systemu na status.podatki.gov.pl — potwierdź że to awaria systemowa, nie Twój problem
+Tryb Online — faktura wysyłana na żywo, numer KSeF nadawany natychmiast.
+
+Tryb Offline24 — Twój lokalny problem (program nie działa, brak internetu). Fakturę wystawiasz lokalnie, masz 1 dzień roboczy na przesłanie do KSeF.
+
+Tryb Awaryjny — oficjalna awaria systemu MF (niedostępność ponad 4 godziny, potwierdzona na status.podatki.gov.pl). Fakturę wystawiasz poza KSeF z oznaczeniem "TRYB AWARYJNY KSeF". Po przywróceniu systemu masz 7 dni roboczych na dosłanie faktur.
+
+### TRYB AWARYJNY — PROCEDURA KROK PO KROKU
+
+1. Sprawdź status systemu na status.podatki.gov.pl — potwierdź że to awaria systemowa, nie Twój problem (Offline24)
 2. Udokumentuj próby wysyłki: zrób zrzuty ekranu z datą i godziną każdej nieudanej próby
 3. Wystaw fakturę poza KSeF — normalnie, w swoim programie, z oznaczeniem "TRYB AWARYJNY KSeF"
 4. Zachowaj dokument potwierdzający awarię (zrzut ekranu ze strony MF z datą)
-5. Po przywróceniu systemu — wprowadź zaległe faktury do KSeF w ciągu 1 dnia roboczego
+5. Po przywróceniu systemu — wprowadź zaległe faktury do KSeF w ciągu 7 dni roboczych
 6. Poinformuj nabywcę, że faktura zostanie uzupełniona o numer KSeF
 
-Ważne: faktury wystawione w trybie awaryjnym są ważne prawnie. Nie musisz ich wystawiać ponownie — tylko uzupełnić numer KSeF po przywróceniu systemu.
+Faktury wystawione w trybie awaryjnym są ważne prawnie.
 
 ### CZĘSTE BŁĘDY
 
@@ -132,11 +150,11 @@ Techniczne:
 - Błąd 401/403 — token wygasł lub zły NIP
 - "Podmiot nie istnieje" — NIP nabywcy nieaktywny w systemie MF
 - Timeout — przeciążenie serwerów, ponawiaj co kilka minut
-- Błąd schematu FA(2) — faktura nie przeszła walidacji struktury
+- Błąd schematu FA(3) — faktura nie przeszła walidacji struktury
 
 Merytoryczne:
-- Błędny NIP nabywcy — potrzebna nota lub faktura korygująca
-- Brak numeru KSeF w przelewie — obowiązkowy od określonego progu
+- Błędny NIP nabywcy — wymagana faktura korygująca w KSeF (nota korygująca nie istnieje od lutego 2026)
+- Brak numeru KSeF w przelewie MPP — obowiązkowy od 1 stycznia 2027
 - Duplikat faktury — system odrzuci fakturę o tym samym numerze
 
 Organizacyjne:
@@ -149,12 +167,7 @@ Organizacyjne:
 - Biuro rachunkowe — pełnomocnictwo lub uprawnienie do wystawiania faktur
 - Role: wystawianie / odbieranie / przeglądanie / zarządzanie uprawnieniami
 
-### TRYBY PRACY
-- Online — faktura wysyłana na żywo, numer KSeF nadawany natychmiast
-- Offline — faktura wystawiana offline, wysyłana do 1. dnia roboczego kolejnego miesiąca lub w ciągu 7 dni
-- Awaryjny — gdy system MF niedostępny ponad 4 godziny (patrz: procedura powyżej)
-
-### WYJĄTKI
+### WYJĄTKI (faktury poza KSeF)
 Faktury dla osób fizycznych nieprowadzących działalności (B2C), faktury podatników zagranicznych bez polskiego NIP, bilety jako faktury, faktury w procedurze OSS/IOSS, paragony z NIP do 450 zł.
 
 ### PRAKTYCZNE WSKAZÓWKI
@@ -164,16 +177,23 @@ Faktury dla osób fizycznych nieprowadzących działalności (B2C), faktury poda
 - Numer KSeF i numer faktury to dwie różne rzeczy — oba są ważne
 - Faktura korygująca musi zawierać numer KSeF faktury korygowanej
 - W razie awarii — dokumentuj próby wysyłki (zrzuty ekranu z datą i godziną)
+- Możesz logować się do KSeF przez aplikację mObywatel (od 14 lutego 2026)
+- WAŻNE: obowiązek odbierania faktur w KSeF obowiązuje od 1 lutego 2026 wszystkich podatników — nawet jeśli wystawianie masz dopiero od kwietnia, już teraz musisz odbierać faktury od dużych dostawców (energia, leasing, telekomy)
+- Korzyść z KSeF: zwrot VAT skrócony z 60 do 40 dni dla firm wystawiających wszystkie faktury w systemie
+- Limit logowań do KSeF: system pozwala logować się nie częściej niż raz na minutę — jeśli ktoś ma problemy z logowaniem, niech odczeka chwilę
+- Faktury z kas rejestrujących (paragony z NIP do 450 zł) są zwolnione z KSeF do 31 grudnia 2026 r.
 
 ### SŁOWNICZEK
 - Faktura ustrukturyzowana = faktura w formacie XML zrozumiałym dla systemu rządowego
-- FA(2) = nazwa tego formatu
+- FA(3) = aktualny format faktury w KSeF (zastąpił FA(2) od lutego 2026)
 - Numer KSeF = unikalny numer nadawany przez system rządowy każdej fakturze
 - UPO = elektroniczne potwierdzenie odbioru faktury przez system
 - Token autoryzacyjny = jednorazowe hasło do połączenia z KSeF
 - Bramka KSeF = internetowe wejście do systemu rządowego
 - Walidacja = sprawdzenie przez komputer czy faktura jest poprawna
 - Środowisko testowe = miejsce do ćwiczeń bez konsekwencji prawnych
+- Tryb Offline24 = lokalny problem użytkownika, 1 dzień roboczy na dosłanie
+- Tryb Awaryjny = oficjalna awaria MF, 7 dni roboczych na dosłanie
 
 ## Psychologia — zasady i granice
 

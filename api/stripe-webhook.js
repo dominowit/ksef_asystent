@@ -30,6 +30,8 @@ const PRICE_TO_PLAN = {
   "price_XXXXX_firma": "firma",  // 199 zł/mies
 };
 
+const RESET_PRICE_ID = "price_1TCeahGtCsuxySf2Rh1uehEP"; // 29 zł jednorazowy reset
+
 const PLAN_NAMES = {
   solo:  "Solo (39 zł/mies.)",
   small: "Mała firma (89 zł/mies.)",
@@ -103,9 +105,9 @@ export default async function handler(req, res) {
     }
 
     await resend.emails.send({
-      from: "Głowa do KSeF <onboarding@resend.dev>",
+      from: "KSeF Asystent <onboarding@resend.dev>",
       to: customerEmail,
-      subject: "Twój token dostępu — Głowa do KSeF",
+      subject: "Twój token dostępu — KSeF Asystent",
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
           <h2>Dziękujemy za subskrypcję!</h2>
@@ -118,7 +120,7 @@ export default async function handler(req, res) {
           </div>
           <p>Jak użyć tokenu:</p>
           <ol>
-            <li>Otwórz <a href="https://glowadoksef.pl">Głowa do KSeF</a></li>
+            <li>Otwórz <a href="https://ksef-asystent.vercel.app">KSeF Asystent</a></li>
             <li>Kliknij przycisk "🔑 Mam token"</li>
             <li>Wpisz powyższy kod</li>
           </ol>
@@ -152,18 +154,18 @@ export default async function handler(req, res) {
 
     if (customerEmail) {
       await resend.emails.send({
-        from: "Głowa do KSeF <onboarding@resend.dev>",
+        from: "KSeF Asystent <onboarding@resend.dev>",
         to: customerEmail,
-        subject: "Subskrypcja anulowana — Głowa do KSeF",
+        subject: "Subskrypcja anulowana — KSeF Asystent",
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
             <h2>Subskrypcja została anulowana</h2>
-            <p>Twój dostęp do Głowy do KSeF wygasł.</p>
+            <p>Twój dostęp do KSeF Asystenta wygasł.</p>
             <p>Jeśli chcesz wznowić subskrypcję:</p>
-            <a href="https://glowadoksef.pl"
+            <a href="https://ksef-asystent.vercel.app"
                style="display:inline-block; background:#2563eb; color:white;
                       padding:12px 24px; border-radius:6px; text-decoration:none;">
-              Wróć do Głowy do KSeF
+              Wróć do KSeF Asystenta
             </a>
             <p style="color: #666; font-size: 14px; margin-top: 20px;">
               Pytania: <a href="mailto:dominowit@gmail.com">dominowit@gmail.com</a>
@@ -212,6 +214,61 @@ export default async function handler(req, res) {
       console.log(`🔄 Odnowiono subskrypcję ${invoice.subscription}`);
     }
     return res.status(200).json({ received: true, renewed: true });
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 5. JEDNORAZOWY RESET LIMITU — zeruj monthly_count
+  // ─────────────────────────────────────────────────────────────
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+
+    if (session.mode === "payment") {
+      const customerEmail = session.customer_details?.email;
+      const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+      const priceId = lineItems.data[0]?.price?.id;
+
+      if (priceId === RESET_PRICE_ID && customerEmail) {
+        // Znajdź token po emailu i wyzeruj licznik
+        const { data: tokens } = await supabase
+          .from("paid_tokens")
+          .select("token")
+          .eq("email", customerEmail)
+          .eq("active", true);
+
+        if (tokens && tokens.length > 0) {
+          await supabase
+            .from("paid_tokens")
+            .update({ monthly_count: 0, count_reset_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() })
+            .eq("email", customerEmail)
+            .eq("active", true);
+
+          await resend.emails.send({
+            from: "KSeF Asystent <onboarding@resend.dev>",
+            to: customerEmail,
+            subject: "Limit wiadomości zresetowany — KSeF Asystent",
+            html: `
+              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2>Limit wiadomości został zresetowany!</h2>
+                <p>Twój miesięczny limit wiadomości został wyzerowany. Możesz teraz korzystać z asystenta bez ograniczeń do końca nowego cyklu.</p>
+                <a href="https://ksef-asystent.vercel.app"
+                   style="display:inline-block; background:#4f46e5; color:white; padding:12px 24px; border-radius:6px; text-decoration:none; margin-top:12px;">
+                  Wróć do KSeF Asystenta
+                </a>
+                <p style="color: #666; font-size: 14px; margin-top: 20px;">
+                  Pytania: <a href="mailto:dominowit@gmail.com">dominowit@gmail.com</a>
+                </p>
+              </div>
+            `,
+          });
+
+          console.log(`🔄 Reset limitu dla ${customerEmail}`);
+          return res.status(200).json({ received: true, reset: true });
+        }
+
+        console.warn(`⚠️ Nie znaleziono aktywnego tokenu dla ${customerEmail}`);
+        return res.status(200).json({ received: true, reset: false, reason: "no active token" });
+      }
+    }
   }
 
   return res.status(200).json({ received: true, skipped: true });

@@ -1,6 +1,4 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import TermsPage from "./TermsPage.jsx";
-import PrivacyPage from "./PrivacyPage.jsx";
 
 const FREE_LIMIT = 5;
 
@@ -198,7 +196,6 @@ export default function GlowaDoksef() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [showPricing, setShowPricing] = useState(false);
   const [showSafety, setShowSafety] = useState(false);
-  const [page, setPage] = useState("chat");
   const [userToken, setUserToken] = useState(() => localStorage.getItem("ksef_token") || null);
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -363,8 +360,6 @@ export default function GlowaDoksef() {
     return `Limit odnowi się za ${m} min.`;
   })();
 
-  if (page === "terms") return <TermsPage onBack={() => setPage("chat")} />;
-  if (page === "privacy") return <PrivacyPage onBack={() => setPage("chat")} />;
 
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #eef2ff 0%, #f5f3ff 50%, #ede9fe 100%)", fontFamily: "'Source Serif 4', Georgia, serif", display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 32 }}>
@@ -438,7 +433,7 @@ export default function GlowaDoksef() {
                   <p style={{ margin: "0 0 8px" }}>Cześć! Pomogę Ci z KSeF i stresem z nim związanym.</p>
                   <div style={{ background: "#f5f3ff", borderRadius: 8, padding: "8px 10px", fontSize: "0.83rem", color: "#4338ca", lineHeight: 1.6, margin: "0 0 8px" }}>
                     ⚠️ Pamiętaj: nie jestem doradcą podatkowym, terapeutą ani lekarzem. Korzystając z asystenta, akceptujesz{" "}
-                    <button onClick={() => setPage("terms")} style={{ background: "none", border: "none", padding: 0, color: "#4f46e5", textDecoration: "underline", cursor: "pointer", fontFamily: "inherit", fontSize: "inherit" }}>regulamin</button>.
+                    <a href="/regulamin.html" target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", textDecoration: "underline" }}>regulamin</a>.
                   </div>
                   <p style={{ margin: "0 0 4px" }}>Możesz pytać o terminy, błędy, uprawnienia, integracje — masz 5 bezpłatnych wiadomości na start.</p>
                   <p style={{ margin: 0, fontSize: "0.83rem", color: "#6b7280" }}>Każda sesja jest niezależna. Co Cię sprowadza?</p>
@@ -491,9 +486,9 @@ export default function GlowaDoksef() {
         </div>
         <p style={{ textAlign: "center", margin: "8px 0 0", fontSize: "0.72rem", color: "#a5b4fc" }}>AI może generować błędy. Zawsze weryfikuj ważne faktury z księgowością.</p>
         <p style={{ textAlign: "center", margin: "6px 0 0", fontSize: "0.72rem" }}>
-          <button onClick={() => setPage("terms")} style={{ background: "none", border: "none", color: "#a5b4fc", cursor: "pointer", fontSize: "0.72rem", fontFamily: "inherit", textDecoration: "underline", padding: 0 }}>Regulamin</button>
+          <a href="/regulamin.html" target="_blank" rel="noopener noreferrer" style={{ color: "#a5b4fc", fontSize: "0.72rem", textDecoration: "underline" }}>Regulamin</a>
           <span style={{ color: "#c7d2fe", margin: "0 6px" }}>•</span>
-          <button onClick={() => setPage("privacy")} style={{ background: "none", border: "none", color: "#a5b4fc", cursor: "pointer", fontSize: "0.72rem", fontFamily: "inherit", textDecoration: "underline", padding: 0 }}>Polityka prywatności</button>
+          <a href="/polityka.html" target="_blank" rel="noopener noreferrer" style={{ color: "#a5b4fc", fontSize: "0.72rem", textDecoration: "underline" }}>Polityka prywatności</a>
         </p>
       </div>
     </div>

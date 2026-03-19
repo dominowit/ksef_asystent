@@ -25,12 +25,12 @@ async function getRawBody(req) {
 
 // Uzupełnij swoimi Price ID ze Stripe → Products
 const PRICE_TO_PLAN = {
-  "price_XXXXX_solo":  "solo",   // 39 zł/mies
-  "price_XXXXX_small": "small",  // 89 zł/mies
-  "price_XXXXX_firma": "firma",  // 199 zł/mies
+  "price_1TClC6GtCsuxySf2tb7iZgtK": "solo",   // 39 zł/mies
+  "price_1TClExGtCsuxySf26vdYhCWh": "small",  // 89 zł/mies
+  "price_1TClFaGtCsuxySf2mqiQsQDM": "firma",  // 199 zł/mies
 };
 
-const RESET_PRICE_ID = "price_1TCeahGtCsuxySf2Rh1uehEP"; // 29 zł jednorazowy reset
+const RESET_PRICE_ID = "price_1TClGGGtCsuxySf2AL3pCKqB"; // 29 zł jednorazowy reset
 
 const PLAN_NAMES = {
   solo:  "Solo (39 zł/mies.)",

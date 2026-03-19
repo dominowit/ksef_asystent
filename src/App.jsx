@@ -81,6 +81,40 @@ const PaywallChatMessage = ({ onShowPlans, resetText }) => (
   </div>
 );
 
+const PlanLimitMessage = ({ resetDate }) => (
+  <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", borderRadius: "18px 18px 18px 4px", padding: "20px 20px 16px", color: "white", boxShadow: "0 4px 20px rgba(79,70,229,0.35)", maxWidth: "78%" }}>
+    <p style={{ margin: "0 0 6px", fontSize: "1.05rem", fontWeight: 700 }}>Wykorzystałeś limit wiadomości na ten miesiąc 📭</p>
+    <p style={{ margin: "0 0 16px", fontSize: "0.85rem", color: "#c7d2fe", lineHeight: 1.6 }}>
+      Twój plan ma swój miesięczny limit — dbamy w ten sposób o jakość i koszty serwera dla wszystkich.
+      {resetDate && <span> Limit odnowi się <strong style={{ color: "white" }}>{resetDate}</strong>.</span>}
+    </p>
+    <p style={{ margin: "0 0 10px", fontSize: "0.85rem", color: "#e0e7ff", fontWeight: 600 }}>Możesz teraz:</p>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
+      {[
+        "Kupić jednorazowy reset limitu za 29 zł i kontynuować od razu.",
+        "Poczekać na automatyczne odnowienie limitu.",
+        "Przejść na wyższy plan z większą liczbą wiadomości.",
+      ].map((item, i) => (
+        <div key={i} style={{ display: "flex", gap: 8, fontSize: "0.83rem", color: "#ddd6fe", lineHeight: 1.55 }}>
+          <span style={{ flexShrink: 0 }}>•</span>
+          <span>{item}</span>
+        </div>
+      ))}
+    </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <a
+        href="https://buy.stripe.com/eVqaEX9bZbKB10u64Ocwg03"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ display: "block", background: "linear-gradient(135deg, #6366f1, #4f46e5)", color: "white", border: "none", borderRadius: 14, padding: "12px 28px", fontWeight: 700, fontSize: "0.95rem", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 4px 14px rgba(99,102,241,0.5)", textAlign: "center", textDecoration: "none" }}
+      >
+        Kup reset za 29 zł →
+      </a>
+      <p style={{ margin: 0, fontSize: "0.72rem", color: "#a5b4fc", textAlign: "center" }}>Po zakupie otrzymasz email z potwierdzeniem resetu.</p>
+    </div>
+  </div>
+);
+
 const PricingModal = ({ onClose, onEnterToken, showTokenField }) => {
   const [token, setToken] = useState("");
   const [selectedPlan, setSelectedPlan] = useState("solo");
@@ -281,6 +315,7 @@ export default function GlowaDoksef() {
       if (response.status === 403) {
         if (data.error === "limit_reached") { setMessages(prev => [...prev, { role: "assistant", content: "paywall" }]); }
         else if (data.error === "upgrade_required") { setMessages(prev => [...prev, { role: "assistant", content: "Analiza faktur dostępna jest w płatnych planach." }]); setShowPaywall(true); }
+        else if (data.error === "plan_limit_reached") { setMessages(prev => [...prev, { role: "assistant", content: "plan_limit", resetDate: data.resetDate }]); }
         else setMessages(prev => [...prev, { role: "assistant", content: data.message || "Brak dostępu." }]);
         setLoading(false); return;
       }
@@ -409,6 +444,8 @@ export default function GlowaDoksef() {
                   <p style={{ margin: 0, fontSize: "0.83rem", color: "#6b7280" }}>Każda sesja jest niezależna. Co Cię sprowadza?</p>
                   <p style={{ margin: "8px 0 0", fontSize: "0.78rem", color: "#9ca3af" }}>Problemy techniczne? Napisz na <a href="mailto:kontakt@glowadoksef.pl" style={{ color: "#6366f1", textDecoration: "none" }}>kontakt@glowadoksef.pl</a></p>
                 </div>
+              ) : msg.role === "assistant" && msg.content === "plan_limit" ? (
+                <PlanLimitMessage resetDate={msg.resetDate} />
               ) : msg.role === "assistant" && msg.content === "paywall" ? (
                 <PaywallChatMessage onShowPlans={() => setShowPricing(true)} resetText={resetText} />
               ) : msg.role === "assistant" ? formatMessage(msg.content) : msg.content}

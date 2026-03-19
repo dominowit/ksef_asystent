@@ -162,33 +162,45 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Błąd bazy danych" });
     }
 
-    await resend.emails.send({
-      from: "KSeF Asystent <onboarding@resend.dev>",
-      to: customerEmail,
-      subject: "Twój token dostępu — KSeF Asystent",
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Dziękujemy za subskrypcję!</h2>
-          <p>Twój plan: <strong>${PLAN_NAMES[plan]}</strong></p>
-          <div style="background: #f0f4ff; border-radius: 8px; padding: 20px; margin: 20px 0;">
-            <p style="margin: 0 0 8px; color: #666;">Twój token dostępu:</p>
-            <code style="font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #2563eb;">
-              ${token}
-            </code>
+    try {
+      await resend.emails.send({
+        from: "KSeF Asystent <onboarding@resend.dev>",
+        to: customerEmail,
+        subject: "Twój token dostępu — KSeF Asystent",
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>Dziękujemy za subskrypcję!</h2>
+            <p>Twój plan: <strong>${PLAN_NAMES[plan]}</strong></p>
+            <div style="background: #f0f4ff; border-radius: 8px; padding: 20px; margin: 20px 0;">
+              <p style="margin: 0 0 8px; color: #666;">Twój token dostępu:</p>
+              <code style="font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #2563eb;">
+                ${token}
+              </code>
+            </div>
+            <p>Jak użyć tokenu:</p>
+            <ol>
+              <li>Otwórz <a href="https://glowadoksef.pl">Głowa do KSeF</a></li>
+              <li>Kliknij przycisk "🔑 Mam token"</li>
+              <li>Wpisz powyższy kod</li>
+            </ol>
+            <p>Token jest ważny przez cały okres subskrypcji i odnawia się automatycznie.</p>
+            <p style="color: #666; font-size: 14px;">
+              Pytania: <a href="mailto:dominowit@gmail.com">dominowit@gmail.com</a>
+            </p>
           </div>
-          <p>Jak użyć tokenu:</p>
-          <ol>
-            <li>Otwórz <a href="https://ksef-asystent.vercel.app">KSeF Asystent</a></li>
-            <li>Kliknij przycisk "🔑 Mam token"</li>
-            <li>Wpisz powyższy kod</li>
-          </ol>
-          <p>Token jest ważny przez cały okres subskrypcji i odnawia się automatycznie.</p>
-          <p style="color: #666; font-size: 14px;">
-            Pytania: <a href="mailto:dominowit@gmail.com">dominowit@gmail.com</a>
-          </p>
-        </div>
-      `,
-    });
+        `,
+      });
+    } catch (emailErr) {
+      // Email nie wysłany — token jest w Supabase, można wysłać ręcznie
+      // Powiadom siebie o problemie
+      console.error(`⚠️ Email NIE wysłany dla ${customerEmail} (token: ${token}):`, emailErr.message);
+      await resend.emails.send({
+        from: "KSeF Asystent <onboarding@resend.dev>",
+        to: "dominowit@gmail.com",
+        subject: `⚠️ Błąd wysyłki tokenu dla ${customerEmail}`,
+        html: `<p>Token <strong>${token}</strong> dla ${customerEmail} (plan: ${plan}) nie został wysłany z powodu błędu. Wyślij ręcznie.</p>`,
+      }).catch(() => {});
+    }
 
     // Wystaw fakturę w Fakturowni
     const customerName = session.customer_details?.name || "";

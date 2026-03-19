@@ -299,11 +299,28 @@ export default async function handler(req, res) {
   // Płatne plany: sprawdź limit wiadomości (monthly reset można dodać później)
   if (isPaid && plan in PLAN_LIMITS) {
     const { data: tokenData } = await supabase.from("paid_tokens").select("monthly_count, count_reset_at").eq("token", userToken.toUpperCase()).single();
-    const monthlyCount = tokenData?.monthly_count || 0;
+
+    const now = new Date();
+    const countResetAt = tokenData?.count_reset_at ? new Date(tokenData.count_reset_at) : null;
+    const shouldReset = !countResetAt || now > countResetAt;
+    const monthlyCount = shouldReset ? 0 : (tokenData?.monthly_count || 0);
+    // Reset co 30 dni od pierwszego użycia w danym cyklu
+    const nextResetAt = shouldReset
+      ? new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      : tokenData.count_reset_at;
+
     if (monthlyCount >= PLAN_LIMITS[plan]) {
-      return res.status(403).json({ error: "plan_limit_reached", message: `Wykorzystałeś limit wiadomości w planie ${plan}. Skontaktuj się z nami żeby przejść na wyższy plan.` });
+      return res.status(403).json({
+        error: "plan_limit_reached",
+        message: `Wykorzystałeś limit ${PLAN_LIMITS[plan]} wiadomości.`,
+        resetDate: new Date(nextResetAt).toLocaleDateString("pl-PL"),
+      });
     }
-    await supabase.from("paid_tokens").update({ monthly_count: monthlyCount + 1 }).eq("token", userToken.toUpperCase());
+
+    await supabase.from("paid_tokens").update({
+      monthly_count: monthlyCount + 1,
+      count_reset_at: nextResetAt,
+    }).eq("token", userToken.toUpperCase());
   }
 
   // Blokuj zdjęcia na darmowym planie

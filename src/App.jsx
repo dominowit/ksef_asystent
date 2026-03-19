@@ -165,19 +165,23 @@ const SafetyModal = ({ onClose }) => (
       <div style={{ display: "flex", flexDirection: "column", gap: 14, fontSize: "0.88rem", color: "#374151", lineHeight: 1.7 }}>
         <div style={{ background: "#f5f3ff", borderRadius: 12, padding: "12px 14px" }}>
           <strong style={{ color: "#3730a3" }}>1. Chroń dane osobowe</strong>
-          <p style={{ margin: "4px 0 0" }}>Przed wklejeniem treści błędu lub fragmentu faktury usuń dane wrażliwe: imiona, nazwiska, numery telefonów, prywatne adresy e-mail. NIP-y firmowe są bezpieczne.</p>
+          <p style={{ margin: "4px 0 0" }}>Przed wklejeniem treści błędu lub fragmentu faktury usuń dane wrażliwe: imiona, nazwiska osób fizycznych, numery telefonów czy prywatne adresy e-mail. NIP-y firmowe są danymi publicznymi, ale jeśli zależy Ci na 100% dyskrecji wobec kontrahenta, je również możesz zakryć przed analizą.</p>
         </div>
         <div style={{ background: "#f5f3ff", borderRadius: 12, padding: "12px 14px" }}>
-          <strong style={{ color: "#3730a3" }}>2. Weryfikuj odpowiedzi</strong>
-          <p style={{ margin: "4px 0 0" }}>Jestem sztuczną inteligencją. Zawsze potwierdzaj kluczowe decyzje finansowe z księgowością lub doradcą podatkowym.</p>
+          <strong style={{ color: "#3730a3" }}>2. Twoja prywatność "w locie"</strong>
+          <p style={{ margin: "4px 0 0" }}>Szanuję Twój biznes. Zapytania i przesyłane pliki są przetwarzane wyłącznie w celu wygenerowania odpowiedzi — za pośrednictwem API Anthropic, które zgodnie z ich polityką prywatności automatycznie usuwa dane w ciągu 7 dni i nie wykorzystuje ich do trenowania modeli. Po mojej stronie — historia rozmów nie jest zapisywana po zamknięciu okna przeglądarki.</p>
         </div>
         <div style={{ background: "#f5f3ff", borderRadius: 12, padding: "12px 14px" }}>
-          <strong style={{ color: "#3730a3" }}>3. To nie terapia</strong>
-          <p style={{ margin: "4px 0 0" }}>Chętnie wysłucham i pomogę się uspokoić — ale w przypadku poważnego kryzysu emocjonalnego skorzystaj z pomocy specjalisty.</p>
+          <strong style={{ color: "#3730a3" }}>3. Weryfikuj odpowiedzi</strong>
+          <p style={{ margin: "4px 0 0" }}>Jestem sztuczną inteligencją, a KSeF to skomplikowany system techniczno-prawny. Zawsze potwierdzaj kluczowe decyzje finansowe z księgowością lub doradcą podatkowym. Traktuj moje odpowiedzi jako eksperckie wsparcie techniczne, a nie ostateczną opinię prawną.</p>
         </div>
         <div style={{ background: "#f5f3ff", borderRadius: 12, padding: "12px 14px" }}>
-          <strong style={{ color: "#3730a3" }}>4. Nigdy nie podawaj haseł ani tokenów</strong>
-          <p style={{ margin: "4px 0 0" }}>Nie podawaj mi haseł ani tokenów autoryzacyjnych do bramki Ministerstwa Finansów.</p>
+          <strong style={{ color: "#3730a3" }}>4. To nie terapia (ale rozumiem stres)</strong>
+          <p style={{ margin: "4px 0 0" }}>Wiem, że błędy w systemach skarbowych potrafią podnieść ciśnienie. Chętnie pomogę Ci zrozumieć problem i uspokoić chaos informacyjny — ale w przypadku poważnego kryzysu emocjonalnego skorzystaj z pomocy specjalisty.</p>
+        </div>
+        <div style={{ background: "#f5f3ff", borderRadius: 12, padding: "12px 14px" }}>
+          <strong style={{ color: "#3730a3" }}>5. Nigdy nie podawaj haseł ani tokenów</strong>
+          <p style={{ margin: "4px 0 0" }}>Nigdy nie wpisuj w oknie czatu haseł ani tokenów autoryzacyjnych do bramki Ministerstwa Finansów. Ja ich nie potrzebuję, by Ci pomóc. Jeśli przez pomyłkę wkleisz taki kod, dla bezpieczeństwa natychmiast wygeneruj nowy token w systemie rządowym.</p>
         </div>
       </div>
       <button onClick={onClose} style={{ marginTop: 20, width: "100%", background: "#4f46e5", color: "white", border: "none", borderRadius: 12, padding: "11px", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", fontFamily: "inherit" }}>Rozumiem, zaczynamy!</button>

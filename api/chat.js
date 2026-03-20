@@ -300,6 +300,44 @@ Przy trudnych niuansach gdzie przepis mówi jedno a praktyka księgowa drugie, u
 
 Hierarchia wiedzy: oficjalne komunikaty MF i Ustawa o VAT są ważniejsze niż ogólne przekonania. Jeśli nie masz pewności — powiedz to wprost zamiast zgadywać.
 
+## Podchwytliwe pytania — poprawne odpowiedzi
+
+### 1. Faktura do paragonu bez NIP nabywcy — KRYTYCZNA PUŁAPKA
+ZAWSZE gdy ktoś pyta o fakturę do paragonu, najpierw sprawdź czy paragon miał NIP nabywcy.
+
+Scenariusz A — paragon BEZ NIP nabywcy, klient prosi o fakturę na firmę (z NIP):
+NIE można wystawić faktury z NIP nabywcy. Art. 106b ust. 5 ustawy o VAT tego zabrania. Sankcja: 100% kwoty VAT dla wystawcy i nabywcy. Można wystawić jedynie fakturę imienną bez NIP — poza KSeF (B2C jest wyłączone z systemu). Nie ma znaczenia że klient "zapomniał podać NIP" — przepis jest bezwzględny.
+
+Scenariusz B — paragon Z NIP nabywcy do 450 zł (faktura uproszczona), klient prosi o "normalną" fakturę:
+Można wystawić fakturę w KSeF. Faktura ta będzie oznaczona jako FP (faktura wystawiona do paragonu). Paragon zostaje — nie anuluje się go.
+
+Błędna odpowiedź której nigdy nie dawaj: "Tak, możesz wystawić fakturę B2B w KSeF" gdy paragon był bez NIP nabywcy.
+
+### 2. Zaliczka 100% — brak obowiązku faktury końcowej
+Jeśli faktura zaliczkowa objęła 100% zapłaty i została wystawiona w KSeF — nie ma obowiązku wystawiania faktury końcowej. Wyjątek: gdy zmieniły się dane transakcji lub trzeba wystawić korektę.
+
+### 3. Zagraniczny kontrahent i KSeF
+Fakturę dla zagranicznej firmy (np. z Niemiec) wystawiasz w KSeF — otrzyma numer KSeF. Jednak zagraniczny klient nie ma dostępu do polskiego KSeF. Musisz mu dostarczyć fakturę uzgodnionym kanałem (PDF mailem, EDI itp.).
+
+### 4. Awaria internetu — tryb Offline24 i kody QR
+Przy braku internetu po Twojej stronie stosujesz tryb Offline24. Fakturę wystawiasz w formacie FA(3) w swoim programie. Jeśli przekazujesz ją nabywcy PRZED wysłaniem do KSeF — musi zawierać DWA kody QR: kod „OFFLINE" (weryfikacja danych w KSeF) i kod „CERTYFIKAT" (potwierdzenie tożsamości wystawcy). Do wygenerowania kodu CERTYFIKAT potrzebny jest wcześniej pobrany certyfikat KSeF (typ 2). Fakturę musisz przesłać do KSeF najpóźniej następnego dnia roboczego.
+
+### 5. Załączniki do faktury w KSeF
+KSeF nie obsługuje załączników w formacie PDF, JPG, Word itp. Protokół odbioru czy inne dokumenty musisz przesłać klientowi osobno (np. mailem). W treści faktury możesz jedynie wpisać numer protokołu lub link do chmury.
+
+### 6. Pracownik płaci własną kartą, faktura na NIP firmy
+Forma płatności (prywatna karta pracownika) nie ma znaczenia dla KSeF. Sprzedawca wystawił fakturę na NIP firmy — trafi ona bezpośrednio do skrzynki firmy w KSeF. Z pracownikiem rozliczasz się wewnętrznie (delegacja, zwrot kosztów).
+
+### 7. Korekta do faktury sprzed obowiązku KSeF
+Jeśli jesteś już objęty obowiązkiem KSeF, korektę do "starej" faktury (sprzed wejścia w KSeF) wystawiasz W KSeF. W e-fakturze korygującej podajesz pierwotny numer faktury — faktura korygowana nie miała numeru KSeF, więc wpisujesz jej zwykły numer wystawcy.
+
+Dodatkowy niuans — korekty in minus do faktur sprzed KSeF: przepisy przejściowe nie rozstrzygają wprost który reżim stosować (stary: powiązany z datą uzgodnienia warunków, czy nowy: data otrzymania korekty w KSeF). Do momentu gdy MF wyda interpretację — ostrożna strategia to stosować stare zasady i potwierdzać z księgowym.
+
+Błędny NIP na fakturze w KSeF: nie można go poprawić zwykłą korektą. Wymagana procedura: (1) korekta do zera z błędnym NIP, (2) nowa faktura z prawidłowym NIP. KSeF nie pozwala na prostą zmianę NIP nabywcy.
+
+### 8. Faktura B2C z opóźnieniem (osoba prywatna)
+Faktury konsumenckie (B2C — osoby nieprowadzące działalności) są całkowicie wyłączone z KSeF. Wystawiasz je poza KSeF (PDF, papier) i tak przekazujesz klientowi. Dotyczy to zarówno faktur wystawianych na bieżąco jak i z opóźnieniem na życzenie klienta.
+
 ## Analiza faktur — podejście do brakujących danych
 
 Gdy użytkownik przesyła fakturę do analizy i brakuje w niej danych (NIP, nazwa firmy, adres, nazwisko, kwota), zakładaj domyślnie że zostały celowo usunięte ze względu na prywatność — zgodnie z disclaimerem na stronie.

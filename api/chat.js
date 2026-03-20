@@ -335,6 +335,25 @@ Dodatkowy niuans — korekty in minus do faktur sprzed KSeF: przepisy przejścio
 
 Błędny NIP na fakturze w KSeF: nie można go poprawić zwykłą korektą. Wymagana procedura: (1) korekta do zera z błędnym NIP, (2) nowa faktura z prawidłowym NIP. KSeF nie pozwala na prostą zmianę NIP nabywcy.
 
+### 9. Faktura o północy — data wystawienia vs data nadania numeru KSeF
+Datą wystawienia faktury jest data jej PRZESŁANIA do KSeF (data kliknięcia "wyślij"), a NIE data nadania numeru przez system. Jeśli ktoś wysłał fakturę 31 marca o 23:55, faktura jest wystawiona 31 marca nawet jeśli numer KSeF dostała 1 kwietnia. Dowód: log w programie lub UPO z datą przesłania.
+
+### 10. Faktura w paczce e-commerce — B2C vs B2B
+Zależy kto kupił. Klient prywatny (B2C) — KSeF nie dotyczy, do paczki wrzucasz paragon lub fakturę PDF jak dawniej. Firma (B2B) — faktura idzie przez KSeF. Do paczki nie trzeba nic wkładać — nabywca odbiera fakturę w KSeF. Opcjonalnie można dodać wizualizację e-faktury z kodem QR.
+
+### 11. Import usług (Facebook, Google) — dokument WEW i KSeF
+Do KSeF NIE wysyła się dokumentów wewnętrznych (WEW) ani raportów z kasy (RO). KSeF służy wyłącznie do faktur między odrębnymi podmiotami. Faktura z Facebooka (import usług z Irlandii) zostaje zaksięgowana w JPK po staremu jako WEW — poza KSeF.
+
+### 12. Faktura VAT RR — rolnik ryczałtowy i KSeF
+KSeF dla faktur VAT RR jest DOBROWOLNY — decyzja należy do rolnika ryczałtowego.
+Nabywca może wystawiać faktury VAT RR w KSeF TYLKO jeśli rolnik wcześniej złożył w systemie oświadczenie że jest rolnikiem ryczałtowym i wskazał tego nabywcę jako uprawnionego. Nie ma "akceptacji po fakcie" — uprawnienie jest nadawane z góry przez rolnika. Jeśli rolnik nie złożył oświadczenia w KSeF — faktura VAT RR wystawiana jest poza systemem, tak jak dotychczas (papier lub e-faktura). Ważne: rolnik musi mieć NIP (PESEL nie wystarczy do KSeF). Jeśli rolnik nadał uprawnienie — nabywca jest zobowiązany wystawiać VAT RR w KSeF i nie może wracać do formy papierowej dla tego rolnika (do czasu odwołania uprawnienia).
+
+### 13. Samofakturowanie (Bolt, Uber, platformy)
+Dokument wysyła ten kto go technicznie wystawia — czyli kontrahent (nabywca). Aby to było legalne, wystawca usługi musi najpierw nadać w KSeF specjalne uprawnienie do samofakturowania. Faktura pojawi się w KSeF wystawcy usługi jako jego sprzedaż.
+
+### 14. Błąd na fakturze w KSeF — nota korygująca nie istnieje
+Noty korygujące wystawiane przez nabywcę zostały zlikwidowane. Nabywca nie może poprawić błędu za wystawcę. Wystawca musi sam wystawić pełnoprawną fakturę korygującą w KSeF.
+
 ### 8. Faktura B2C z opóźnieniem (osoba prywatna)
 Faktury konsumenckie (B2C — osoby nieprowadzące działalności) są całkowicie wyłączone z KSeF. Wystawiasz je poza KSeF (PDF, papier) i tak przekazujesz klientowi. Dotyczy to zarówno faktur wystawianych na bieżąco jak i z opóźnieniem na życzenie klienta.
 

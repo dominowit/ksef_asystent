@@ -164,7 +164,7 @@ export default async function handler(req, res) {
 
     try {
       await resend.emails.send({
-        from: "KSeF Asystent <onboarding@resend.dev>",
+        from: "Głowa do KSeF <noreply@glowadoksef.pl>",
         to: customerEmail,
         subject: "Twój token dostępu — KSeF Asystent",
         html: `
@@ -195,7 +195,7 @@ export default async function handler(req, res) {
       // Powiadom siebie o problemie
       console.error(`⚠️ Email NIE wysłany dla ${customerEmail} (token: ${token}):`, emailErr.message);
       await resend.emails.send({
-        from: "KSeF Asystent <onboarding@resend.dev>",
+        from: "Głowa do KSeF <noreply@glowadoksef.pl>",
         to: "dominowit@gmail.com",
         subject: `⚠️ Błąd wysyłki tokenu dla ${customerEmail}`,
         html: `<p>Token <strong>${token}</strong> dla ${customerEmail} (plan: ${plan}) nie został wysłany z powodu błędu. Wyślij ręcznie.</p>`,
@@ -241,7 +241,7 @@ export default async function handler(req, res) {
 
     if (customerEmail) {
       await resend.emails.send({
-        from: "KSeF Asystent <onboarding@resend.dev>",
+        from: "Głowa do KSeF <noreply@glowadoksef.pl>",
         to: customerEmail,
         subject: "Subskrypcja anulowana — KSeF Asystent",
         html: `
@@ -330,7 +330,7 @@ export default async function handler(req, res) {
             .eq("active", true);
 
           await resend.emails.send({
-            from: "KSeF Asystent <onboarding@resend.dev>",
+            from: "Głowa do KSeF <noreply@glowadoksef.pl>",
             to: customerEmail,
             subject: "Limit wiadomości zresetowany — KSeF Asystent",
             html: `

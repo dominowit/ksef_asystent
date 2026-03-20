@@ -18,6 +18,7 @@ async function createFakturowniaInvoice({ customerEmail, customerName, customerN
 
   const today = new Date().toISOString().split("T")[0];
   const paymentTo = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const isCompany = !!customerNip;
 
   const invoiceData = {
     api_token: apiToken,
@@ -35,9 +36,10 @@ async function createFakturowniaInvoice({ customerEmail, customerName, customerN
       buyer_name: customerName || customerEmail,
       buyer_email: customerEmail,
       buyer_tax_no: customerNip || "",
+      buyer_company: isCompany,
       currency: "PLN",
       status: "paid",
-      payment_type: "card",
+      payment_type: "karta",
       positions: [
         {
           name: productName,
@@ -62,6 +64,20 @@ async function createFakturowniaInvoice({ customerEmail, customerName, customerN
   }
 
   console.log(`🧾 Faktura wystawiona: ${data.number} dla ${customerEmail}`);
+
+  // Wyślij fakturę emailem do klienta (osobne wywołanie API)
+  if (data.id) {
+    const emailResponse = await fetch(
+      `https://${domain}.fakturownia.pl/invoices/${data.id}/send_by_email.json?api_token=${apiToken}`,
+      { method: "POST" }
+    );
+    if (emailResponse.ok) {
+      console.log(`📧 Faktura wysłana emailem do ${customerEmail}`);
+    } else {
+      console.warn(`⚠️ Faktura wystawiona ale email nie wysłany dla ${customerEmail}`);
+    }
+  }
+
   return data;
 }
 

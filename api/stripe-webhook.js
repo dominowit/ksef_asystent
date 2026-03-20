@@ -8,6 +8,7 @@
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
+import crypto from "crypto";
 
 
 // Fakturownia — wystawia fakturę i wysyła do KSeF
@@ -15,19 +16,17 @@ async function createFakturowniaInvoice({ customerEmail, customerName, customerN
   const domain = process.env.FAKTUROWNIA_DOMAIN;
   const apiToken = process.env.FAKTUROWNIA_API_TOKEN;
 
-  // Oblicz netto i VAT z kwoty brutto (23%)
-  const vatRate = 0.23;
-  const netAmount = Math.round((grossAmount / 1.23) * 100) / 100;
-  const vatAmount = Math.round((grossAmount - netAmount) * 100) / 100;
+  const today = new Date().toISOString().split("T")[0];
+  const paymentTo = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
   const invoiceData = {
     api_token: apiToken,
     invoice: {
       kind: "vat",
-      number: null, // Fakturownia nada automatycznie
-      sell_date: new Date().toISOString().split("T")[0],
-      issue_date: new Date().toISOString().split("T")[0],
-      payment_to: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      number: null,
+      sell_date: today,
+      issue_date: today,
+      payment_to: paymentTo,
       seller_name: "Inżynieria Wodna DO-KOP Dominik Witkowski",
       seller_tax_no: "7393960834",
       seller_post_code: "11-510",
@@ -37,14 +36,14 @@ async function createFakturowniaInvoice({ customerEmail, customerName, customerN
       buyer_email: customerEmail,
       buyer_tax_no: customerNip || "",
       currency: "PLN",
-      payment_type: "transfer",
+      status: "paid",
+      payment_type: "card",
       positions: [
         {
           name: productName,
           quantity: 1,
-          unit: "szt.",
           total_price_gross: grossAmount,
-          tax: "23",
+          tax: 23,
         }
       ],
     }
@@ -57,7 +56,7 @@ async function createFakturowniaInvoice({ customerEmail, customerName, customerN
   });
 
   const data = await response.json();
-  if (!response.ok) {
+  if (data.code === "error") {
     console.error("Fakturownia error:", data);
     throw new Error(`Fakturownia error: ${JSON.stringify(data)}`);
   }
@@ -143,7 +142,7 @@ export default async function handler(req, res) {
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
     const priceId = subscription.items.data[0]?.price?.id;
     const plan = PRICE_TO_PLAN[priceId] || "solo";
-    const token = require("crypto").randomBytes(6).toString("hex").toUpperCase();
+    const token = crypto.randomBytes(6).toString("hex").toUpperCase();
 
     const { error: dbError } = await supabase.from("paid_tokens").insert({
       token,

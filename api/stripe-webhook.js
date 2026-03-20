@@ -47,8 +47,6 @@ async function createFakturowniaInvoice({ customerEmail, customerName, customerN
           tax: "23",
         }
       ],
-      // Wysyłka do KSeF automatycznie
-      ksef: true,
     }
   };
 

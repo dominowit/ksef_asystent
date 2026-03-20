@@ -17,7 +17,7 @@ async function createFakturowniaInvoice({ customerEmail, customerName, customerN
   const apiToken = process.env.FAKTUROWNIA_API_TOKEN;
 
   const today = new Date().toISOString().split("T")[0];
-  const paymentTo = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const paymentTo = today; // płatność pobrana natychmiast przez Stripe
   const isCompany = !!customerNip;
 
   const invoiceData = {
@@ -137,11 +137,76 @@ export default async function handler(req, res) {
   console.log(`📨 Stripe event: ${event.type}`);
 
   // ─────────────────────────────────────────────────────────────
-  // 1. NOWA SUBSKRYPCJA — utwórz token i wyślij email
+  // 1. CHECKOUT — subskrypcja lub jednorazowy reset
   // ─────────────────────────────────────────────────────────────
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
 
+    // ── JEDNORAZOWY RESET LIMITU ──
+    if (session.mode === "payment") {
+      const customerEmail = session.customer_details?.email;
+      const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+      const priceId = lineItems.data[0]?.price?.id;
+
+      if (priceId === RESET_PRICE_ID && customerEmail) {
+        const { data: tokens } = await supabase
+          .from("paid_tokens")
+          .select("token")
+          .eq("email", customerEmail)
+          .eq("active", true);
+
+        if (tokens && tokens.length > 0) {
+          await supabase
+            .from("paid_tokens")
+            .update({ monthly_count: 0, count_reset_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() })
+            .eq("email", customerEmail)
+            .eq("active", true);
+
+          await resend.emails.send({
+            from: "Głowa do KSeF <noreply@glowadoksef.pl>",
+            to: customerEmail,
+            subject: "Limit wiadomości zresetowany — KSeF Asystent",
+            html: `
+              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2>Limit wiadomości został zresetowany!</h2>
+                <p>Twój miesięczny limit wiadomości został wyzerowany. Możesz teraz korzystać z asystenta bez ograniczeń do końca nowego cyklu.</p>
+                <a href="https://glowadoksef.pl"
+                   style="display:inline-block; background:#4f46e5; color:white; padding:12px 24px; border-radius:6px; text-decoration:none; margin-top:12px;">
+                  Wróć do Głowa do KSeF
+                </a>
+                <p style="color: #666; font-size: 14px; margin-top: 20px;">
+                  Pytania: <a href="mailto:dominowit@gmail.com">dominowit@gmail.com</a>
+                </p>
+              </div>
+            `,
+          }).catch(err => console.error("Błąd emaila reset:", err.message));
+
+          const resetCustomerName = session.customer_details?.name || "";
+          const resetCustomerNip = session.customer_details?.tax_ids?.[0]?.value || "";
+          try {
+            await createFakturowniaInvoice({
+              customerEmail,
+              customerName: resetCustomerName,
+              customerNip: resetCustomerNip,
+              productName: "KSeF Asystent — Reset limitu wiadomości",
+              grossAmount: 29,
+            });
+          } catch (err) {
+            console.error("Błąd Fakturowni (reset):", err.message);
+          }
+
+          console.log(`🔄 Reset limitu dla ${customerEmail}`);
+          return res.status(200).json({ received: true, reset: true });
+        }
+
+        console.warn(`⚠️ Nie znaleziono aktywnego tokenu dla ${customerEmail}`);
+        return res.status(200).json({ received: true, reset: false, reason: "no active token" });
+      }
+
+      return res.status(200).json({ received: true, skipped: "unknown payment" });
+    }
+
+    // ── NOWA SUBSKRYPCJA ──
     if (session.mode !== "subscription") {
       return res.status(200).json({ received: true, skipped: "not subscription" });
     }
@@ -306,84 +371,45 @@ export default async function handler(req, res) {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // 4. ODNOWIENIE — token dalej aktywny, tylko logowanie
+  // 4. ODNOWIENIE — wystaw fakturę za kolejny miesiąc
   // ─────────────────────────────────────────────────────────────
   if (event.type === "invoice.payment_succeeded") {
     const invoice = event.data.object;
+
     if (invoice.billing_reason === "subscription_cycle") {
       console.log(`🔄 Odnowiono subskrypcję ${invoice.subscription}`);
-    }
-    return res.status(200).json({ received: true, renewed: true });
-  }
 
-  // ─────────────────────────────────────────────────────────────
-  // 5. JEDNORAZOWY RESET LIMITU — zeruj monthly_count
-  // ─────────────────────────────────────────────────────────────
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
+      const customerEmail = invoice.customer_email;
+      const grossAmount = Math.round(invoice.amount_paid / 100);
 
-    if (session.mode === "payment") {
-      const customerEmail = session.customer_details?.email;
-      const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-      const priceId = lineItems.data[0]?.price?.id;
-
-      if (priceId === RESET_PRICE_ID && customerEmail) {
-        // Znajdź token po emailu i wyzeruj licznik
-        const { data: tokens } = await supabase
+      if (customerEmail && grossAmount > 0) {
+        // Pobierz dane klienta z Supabase żeby mieć aktualny plan i NIP
+        const { data: tokenData } = await supabase
           .from("paid_tokens")
-          .select("token")
-          .eq("email", customerEmail)
-          .eq("active", true);
+          .select("plan, email")
+          .eq("stripe_subscription_id", invoice.subscription)
+          .eq("active", true)
+          .single();
 
-        if (tokens && tokens.length > 0) {
-          await supabase
-            .from("paid_tokens")
-            .update({ monthly_count: 0, count_reset_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() })
-            .eq("email", customerEmail)
-            .eq("active", true);
+        const plan = tokenData?.plan || "solo";
+        const customerNip = invoice.customer_tax_ids?.[0]?.value || "";
+        const customerName = invoice.customer_name || "";
 
-          await resend.emails.send({
-            from: "Głowa do KSeF <noreply@glowadoksef.pl>",
-            to: customerEmail,
-            subject: "Limit wiadomości zresetowany — KSeF Asystent",
-            html: `
-              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2>Limit wiadomości został zresetowany!</h2>
-                <p>Twój miesięczny limit wiadomości został wyzerowany. Możesz teraz korzystać z asystenta bez ograniczeń do końca nowego cyklu.</p>
-                <a href="https://ksef-asystent.vercel.app"
-                   style="display:inline-block; background:#4f46e5; color:white; padding:12px 24px; border-radius:6px; text-decoration:none; margin-top:12px;">
-                  Wróć do KSeF Asystenta
-                </a>
-                <p style="color: #666; font-size: 14px; margin-top: 20px;">
-                  Pytania: <a href="mailto:dominowit@gmail.com">dominowit@gmail.com</a>
-                </p>
-              </div>
-            `,
+        try {
+          await createFakturowniaInvoice({
+            customerEmail,
+            customerName,
+            customerNip,
+            productName: `KSeF Asystent — ${PLAN_NAMES[plan] || "Odnowienie subskrypcji"}`,
+            grossAmount,
           });
-
-          // Wystaw fakturę za reset
-          const resetCustomerName = session.customer_details?.name || "";
-          const resetCustomerNip = session.customer_details?.tax_ids?.[0]?.value || "";
-          try {
-            await createFakturowniaInvoice({
-              customerEmail,
-              customerName: resetCustomerName,
-              customerNip: resetCustomerNip,
-              productName: "KSeF Asystent — Reset limitu wiadomości",
-              grossAmount: 29,
-            });
-          } catch (err) {
-            console.error("Błąd Fakturowni (reset):", err.message);
-          }
-
-          console.log(`🔄 Reset limitu dla ${customerEmail}`);
-          return res.status(200).json({ received: true, reset: true });
+        } catch (err) {
+          console.error("Błąd Fakturowni (odnowienie):", err.message);
         }
-
-        console.warn(`⚠️ Nie znaleziono aktywnego tokenu dla ${customerEmail}`);
-        return res.status(200).json({ received: true, reset: false, reason: "no active token" });
       }
     }
+
+    return res.status(200).json({ received: true, renewed: true });
   }
 
   return res.status(200).json({ received: true, skipped: true });

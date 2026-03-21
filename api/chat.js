@@ -8,7 +8,7 @@ const FREE_MESSAGE_LIMIT = 5;
 const PLAN_LIMITS = {
   solo: 200,
   small: 600,
-  business: 2000,
+  firma: 2000,
 };
 
 // Weryfikacja tokenu w Supabase (zastępuje hardkodowany PAID_TOKENS)
@@ -69,7 +69,15 @@ Zawsze miej świadomość tych granic i stosuj je naturalnie, bez nadmiernego po
 ### KRYTYCZNE — JPK_V7(3) I OZNACZENIA OD 1 LUTEGO 2026
 To jest najważniejsza wiedza dla użytkowników w 2026 roku. Bot musi ją stosować priorytetowo.
 
-**BFK (Brak Faktury KSeF)** — oficjalne oznaczenie w JPK_V7(3) dla faktur papierowych lub elektronicznych wystawionych POZA KSeF w przypadkach dopuszczonych przez ustawę. To NIE jest kod programu księgowego — to urzędowy znacznik w strukturze JPK.
+Cztery możliwe oznaczenia w węźle KSeF struktury JPK_V7(3):
+
+**NrKSeF** — wpisujemy 35-znakowy numer KSeF faktury, gdy faktura była wysłana do KSeF i MA już nadany numer w dniu składania JPK.
+
+**OFF** — faktura wystawiona w trybie offline (offline24 lub awaria MF) i w dniu składania JPK jeszcze NIE ma numeru KSeF. OFF jest tymczasowe — gdy faktura dostanie numer KSeF, trzeba złożyć korektę JPK i zastąpić OFF numerem NrKSeF.
+
+**BFK (Brak Faktury KSeF)** — faktura wystawiona POZA KSeF w przypadkach dopuszczonych ustawą (B2C, okres przejściowy luty-marzec 2026, całkowita awaria KSeF). BFK jest docelowe — nie wymaga późniejszej korekty. To NIE jest kod programu — to urzędowy znacznik w strukturze JPK.
+
+**DI (Dokument Inny)** — WYŁĄCZNIE dla dokumentów, które z natury NIE są fakturami ustrukturyzowanymi: raporty kas fiskalnych (RO), dokumenty wewnętrzne (WEW), faktury zagraniczne (WNT, import usług). DI NIE jest wyjściem awaryjnym dla zwykłych faktur krajowych z problemem technicznym — użycie DI zamiast NrKSeF lub OFF dla faktury krajowej to błąd grożący kontrolą.
 
 Kto musi oznaczać BFK od 1 lutego 2026:
 - Firmy z obowiązkiem KSeF od 1 KWIETNIA 2026 — MUSZĄ oznaczać BFK we wszystkich fakturach sprzedaży już od 1 lutego 2026. Stanowisko MF z 3 marca 2026 r. potwierdza to wprost.
@@ -77,6 +85,47 @@ Kto musi oznaczać BFK od 1 lutego 2026:
 - Brak oznaczenia BFK = odrzucenie pliku JPK przez system MF na etapie weryfikacji technicznej.
 
 TYPOWY BŁĄD który bot musi prostować: gdy ktoś twierdzi że "w lutym nie trzeba jeszcze oznaczać BFK bo obowiązek KSeF mam od kwietnia" — to jest nieprawda. Oznaczenia w JPK_V7(3) obowiązują od 1 lutego 2026, niezależnie od daty obowiązku KSeF.
+
+### KRYTYCZNE — FORMAT NUMERU KSeF I BŁĄD "BRAK IDENTYFIKATORA"
+
+Numer KSeF to 35-znakowy alfanumeryczny identyfikator o stałej strukturze:
+NIP sprzedawcy (10 cyfr) + data RRRRMMDD (8 znaków) + część techniczna (12 znaków) + suma kontrolna (2 znaki) + 3 myślniki = 35 znaków łącznie.
+Przykładowy wygląd: 5261040828-20260321-1E5A5C-F1 (to schemat poglądowy).
+
+WAŻNE: Numer KSeF NIE wygląda jak UUID (XXXX-XXXX-XXXX-XXXX). Nigdy nie podawaj formatu UUID — to błąd merytoryczny.
+
+Numer KSeF to ODDZIELNE pole od numeru faktury nadanego przez podatnika. W każdym programie księgowym są dwa różne pola:
+- "Numer faktury" — nadany przez sprzedawcę (np. FV/2026/03/001)
+- "Identyfikator KSeF" / "Numer KSeF" — 35-znakowy, nadany automatycznie przez system KSeF i zwrócony w UPO
+
+Numer KSeF NIE jest elementem pliku XML faktury — jest zwracany w UPO (Urzędowym Poświadczeniu Odbioru) po przyjęciu faktury przez KSeF.
+
+TYPOWY BŁĄD — komunikat "Dokument bez identyfikatora KSeF o numerze XXXX musi być oznaczony jednym z kodów BFK, OFF, DI":
+Program widzi fakturę w ewidencji, ale pole "Identyfikator KSeF" jest puste lub zawiera wartość w złym formacie.
+
+Jak diagnozować krok po kroku:
+1. Wejdź w szczegóły tej faktury w programie i znajdź pole "Identyfikator KSeF" lub "Numer KSeF" (nie "Numer faktury"!)
+2. Jeśli numer KSeF jest — ale wpisany w złym polu (np. w opisie) — przenieś go do właściwego pola "Identyfikator KSeF"
+3. Jeśli pole jest puste, a faktura była wysłana do KSeF — wejdź do bramki KSeF lub sprawdź UPO, skopiuj numer i wpisz ręcznie
+4. Jeśli faktura ma numer KSeF i jest wpisana prawidłowo — sprawdź czy program ma aktualną aktualizację obsługującą JPK_V7(3)
+5. Jeśli faktura NIE trafi nigdy do KSeF (B2C, awaria całkowita) — użyj BFK
+6. Jeśli faktura offline i jeszcze nie wysłana do KSeF — użyj OFF, potem skoryguj po wysłaniu
+
+### POPULARNE PROGRAMY KSIĘGOWE I KSeF
+
+Bot zna te programy i udziela konkretnych wskazówek:
+
+**WAPRO Kaper** — program do KPiR/ryczałtu dla małych firm od Asseco WAPRO. Integracja z KSeF przez moduł Businesslink — faktury z KSeF trafiają do bufora dokumentów, skąd są przenoszone do księgowania. Ma dwa oddzielne pola: numer faktury podatnika i identyfikator KSeF. JPK generuje współpracujący program WAPRO JPK.
+
+**WAPRO Fakir** — pełna księgowość od Asseco WAPRO, integracja przez Businesslink.
+
+**Comarch ERP Optima** — popularne w biurach rachunkowych, pełna obsługa KSeF.
+
+**wFirma, iFirma, inFakt, Fakturownia** — programy online z wbudowaną integracją KSeF.
+
+**Symfonia** — obsługuje KSeF, JPK_V7(3).
+
+Gdy ktoś pyta o konkretny program — odpowiadaj konkretnie. Jeśli nie znasz szczegółów danego problemu w tym programie, powiedz wprost i wskaż helpdesk producenta.
 
 ### PODSTAWY
 - KSeF (Krajowy System e-Faktur) to rządowy system do wystawiania i odbierania faktur w formacie XML (FA(3))
@@ -496,8 +545,10 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: "upgrade_required", message: "Analiza faktur dostępna tylko w płatnych planach." });
   }
 
-  // Ogranicz historię do ostatnich 10 wiadomości
-  const trimmedMessages = messages.slice(-10);
+  // Ogranicz historię: zachowaj pierwszą wiadomość (kontekst) + ostatnie 9
+  const trimmedMessages = messages.length <= 10
+    ? messages
+    : [messages[0], ...messages.slice(-9)];
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -508,7 +559,7 @@ export default async function handler(req, res) {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-6",
         max_tokens: 1000,
         system: SYSTEM_PROMPT,
         messages: trimmedMessages,

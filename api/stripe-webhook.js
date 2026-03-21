@@ -327,7 +327,7 @@ export default async function handler(req, res) {
             <h2>Subskrypcja została anulowana</h2>
             <p>Twój dostęp do KSeF Asystenta wygasł.</p>
             <p>Jeśli chcesz wznowić subskrypcję:</p>
-            <a href="https://ksef-asystent.vercel.app"
+            <a href="https://glowadoksef.pl"
                style="display:inline-block; background:#2563eb; color:white;
                       padding:12px 24px; border-radius:6px; text-decoration:none;">
               Wróć do KSeF Asystenta

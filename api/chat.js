@@ -122,26 +122,28 @@ Błędy schematu XML:
 - "missing required element" — brak obowiązkowego pola; sprawdź listę wymaganych pól FA(3)
 - "invalid date format" — data w złym formacie; musi być YYYY-MM-DD
 
-### TRYBY PRACY KSeF — WAŻNE ROZRÓŻNIENIE
+### TRYBY PRACY KSeF — CZTERY OFICJALNE TRYBY MF
 
-Są trzy tryby — nie mylić ich ze sobą:
+Są cztery tryby — używaj ich oficjalnych nazw, nie mylić:
 
-Tryb Online — faktura wysyłana na żywo, numer KSeF nadawany natychmiast.
+**Tryb online** — standardowy. Faktura wysyłana na żywo, numer KSeF nadawany natychmiast.
 
-Tryb Offline24 — Twój lokalny problem (program nie działa, brak internetu). Fakturę wystawiasz lokalnie, masz 1 dzień roboczy na przesłanie do KSeF.
+**Tryb offline24** (art. 106nda ustawy o VAT) — Twój lokalny problem (brak internetu, awaria programu). "Offline24" to oficjalna nazwa MF używana w Q&A KSeF 2.0. Możesz z niego korzystać zawsze, bez ogłoszenia MF. Fakturę wystawiasz w strukturze FA(3) z dwoma kodami QR (OFFLINE i CERTYFIKAT — do wygenerowania potrzebny certyfikat KSeF typ 2). Musisz przesłać ją do KSeF najpóźniej następnego dnia roboczego.
 
-Tryb Awaryjny — oficjalna awaria systemu MF (niedostępność ponad 4 godziny, potwierdzona na status.podatki.gov.pl). Fakturę wystawiasz poza KSeF z oznaczeniem "TRYB AWARYJNY KSeF". Po przywróceniu systemu masz 7 dni roboczych na dosłanie faktur.
+**Tryb offline — niedostępność KSeF** (art. 106nh ustawy o VAT) — MF ogłosiło w BIP planową niedostępność systemu (np. prace serwisowe). Zasady jak w offline24 — faktura w FA(3) z kodami QR, termin: następny dzień roboczy po zakończeniu niedostępności.
 
-### TRYB AWARYJNY — PROCEDURA KROK PO KROKU
+**Tryb awaryjny** (art. 106nf ustawy o VAT) — MF ogłosiło w BIP i oprogramowaniu interfejsowym nieplanowaną awarię KSeF. Faktura w FA(3) z kodami QR. Termin: 7 dni roboczych od zakończenia awarii. Jeśli w trakcie tych 7 dni wystąpi kolejna awaria — termin liczy się od zakończenia ostatniej.
 
-1. Sprawdź status systemu na status.podatki.gov.pl — potwierdź że to awaria systemowa, nie Twój problem (Offline24)
-2. Udokumentuj próby wysyłki: zrób zrzuty ekranu z datą i godziną każdej nieudanej próby
-3. Wystaw fakturę poza KSeF — normalnie, w swoim programie, z oznaczeniem "TRYB AWARYJNY KSeF"
-4. Zachowaj dokument potwierdzający awarię (zrzut ekranu ze strony MF z datą)
-5. Po przywróceniu systemu — wprowadź zaległe faktury do KSeF w ciągu 7 dni roboczych
-6. Poinformuj nabywcę, że faktura zostanie uzupełniona o numer KSeF
+**Awaria całkowita / siła wyższa** — sytuacje nadzwyczajne (zagrożenie kraju, infrastruktury krytycznej). Można wystawiać faktury papierowe lub elektroniczne BEZ struktury FA(3) i BEZ kodów QR. To absolutny margines — dotyczy sytuacji gdy nie ma dostępu do żadnego oprogramowania.
 
-Faktury wystawione w trybie awaryjnym są ważne prawnie.
+### PROCEDURA PRZY OFFLINE24 (najczęstszy przypadek)
+
+1. Wystaw fakturę w programie w strukturze FA(3)
+2. Jeśli przekazujesz ją nabywcy B2C lub zagranicznym przed wysłaniem do KSeF — musi mieć dwa kody QR (OFFLINE i CERTYFIKAT)
+3. Prześlij do KSeF najpóźniej następnego dnia roboczego
+4. Nabywca B2B z NIP odbiera fakturę normalnie przez KSeF po nadaniu numeru
+
+Faktury wystawione w trybie offline24 są ważne prawnie od daty wskazanej przez podatnika (nie od daty nadania numeru KSeF).
 
 ### CZĘSTE BŁĘDY
 
@@ -192,8 +194,10 @@ Faktury dla osób fizycznych nieprowadzących działalności (B2C), faktury poda
 - Bramka KSeF = internetowe wejście do systemu rządowego
 - Walidacja = sprawdzenie przez komputer czy faktura jest poprawna
 - Środowisko testowe = miejsce do ćwiczeń bez konsekwencji prawnych
-- Tryb Offline24 = lokalny problem użytkownika, 1 dzień roboczy na dosłanie
-- Tryb Awaryjny = oficjalna awaria MF, 7 dni roboczych na dosłanie
+- Tryb offline24 = lokalny problem użytkownika (brak internetu), 1 dzień roboczy na dosłanie do KSeF
+- Tryb offline (niedostępność) = planowa niedostępność ogłoszona przez MF w BIP, 1 dzień roboczy
+- Tryb awaryjny = nieplanowana awaria ogłoszona przez MF, 7 dni roboczych na dosłanie
+- Awaria całkowita = sytuacje nadzwyczajne, faktury papierowe/elektroniczne, nie dosyła się do KSeF
 
 ## Fakturownia + KSeF — praktyczna wiedza
 
@@ -319,8 +323,8 @@ Jeśli faktura zaliczkowa objęła 100% zapłaty i została wystawiona w KSeF �
 ### 3. Zagraniczny kontrahent i KSeF
 Fakturę dla zagranicznej firmy (np. z Niemiec) wystawiasz w KSeF — otrzyma numer KSeF. Jednak zagraniczny klient nie ma dostępu do polskiego KSeF. Musisz mu dostarczyć fakturę uzgodnionym kanałem (PDF mailem, EDI itp.).
 
-### 4. Awaria internetu — tryb Offline24 i kody QR
-Przy braku internetu po Twojej stronie stosujesz tryb Offline24. Fakturę wystawiasz w formacie FA(3) w swoim programie. Jeśli przekazujesz ją nabywcy PRZED wysłaniem do KSeF — musi zawierać DWA kody QR: kod „OFFLINE" (weryfikacja danych w KSeF) i kod „CERTYFIKAT" (potwierdzenie tożsamości wystawcy). Do wygenerowania kodu CERTYFIKAT potrzebny jest wcześniej pobrany certyfikat KSeF (typ 2). Fakturę musisz przesłać do KSeF najpóźniej następnego dnia roboczego.
+### 4. Awaria internetu — tryb offline24 i kody QR
+Przy braku internetu po Twojej stronie stosujesz tryb offline24 (art. 106nda ustawy o VAT). Fakturę wystawiasz w strukturze FA(3) w swoim programie. Jeśli przekazujesz ją nabywcy PRZED wysłaniem do KSeF (dotyczy B2C i podmiotów zagranicznych) — musi zawierać DWA kody QR: kod „OFFLINE" (weryfikacja danych w KSeF) i kod „CERTYFIKAT" (potwierdzenie tożsamości wystawcy). Do wygenerowania kodu CERTYFIKAT potrzebny jest certyfikat KSeF (typ 2) pobrany wcześniej z MCU. Fakturę musisz przesłać do KSeF najpóźniej następnego dnia roboczego. Nabywca B2B z NIP krajowym odbiera fakturę przez KSeF po nadaniu numeru — jemu nie udostępniasz faktury poza systemem.
 
 ### 5. Załączniki do faktury w KSeF
 KSeF nie obsługuje załączników w formacie PDF, JPG, Word itp. Protokół odbioru czy inne dokumenty musisz przesłać klientowi osobno (np. mailem). W treści faktury możesz jedynie wpisać numer protokołu lub link do chmury.

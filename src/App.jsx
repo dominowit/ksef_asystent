@@ -169,7 +169,7 @@ const SafetyModal = ({ onClose }) => (
         </div>
         <div style={{ background: "#f5f3ff", borderRadius: 12, padding: "12px 14px" }}>
           <strong style={{ color: "#3730a3" }}>2. Twoja prywatność "w locie"</strong>
-          <p style={{ margin: "4px 0 0" }}>Szanuję Twój biznes. Zapytania i przesyłane pliki są przetwarzane wyłącznie w celu wygenerowania odpowiedzi — za pośrednictwem API Anthropic, które zgodnie z ich polityką prywatności automatycznie usuwa dane w ciągu 7 dni i nie wykorzystuje ich do trenowania modeli. Po mojej stronie — historia rozmów nie jest zapisywana po zamknięciu okna przeglądarki.</p>
+          <p style={{ margin: "4px 0 0" }}>Szanuję Twój biznes. Zapytania i przesyłane pliki są przetwarzane wyłącznie w celu wygenerowania odpowiedzi — za pośrednictwem API Anthropic, które zgodnie z ich polityką prywatności przechowuje dane przez maksymalnie 30 dni w celach bezpieczeństwa i monitorowania nadużyć, po czym są automatycznie usuwane i nie są wykorzystywane do trenowania modeli. Po mojej stronie — historia rozmów nie jest zapisywana po zamknięciu okna przeglądarki.</p>
         </div>
         <div style={{ background: "#f5f3ff", borderRadius: 12, padding: "12px 14px" }}>
           <strong style={{ color: "#3730a3" }}>3. Weryfikuj odpowiedzi</strong>
@@ -182,6 +182,10 @@ const SafetyModal = ({ onClose }) => (
         <div style={{ background: "#f5f3ff", borderRadius: 12, padding: "12px 14px" }}>
           <strong style={{ color: "#3730a3" }}>5. Nigdy nie podawaj haseł ani tokenów</strong>
           <p style={{ margin: "4px 0 0" }}>Nigdy nie wpisuj w oknie czatu haseł ani tokenów autoryzacyjnych do bramki Ministerstwa Finansów. Ja ich nie potrzebuję, by Ci pomóc. Jeśli przez pomyłkę wkleisz taki kod, dla bezpieczeństwa natychmiast wygeneruj nowy token w systemie rządowym.</p>
+        </div>
+        <div style={{ background: "#fff7ed", borderRadius: 12, padding: "12px 14px", border: "1px solid #fed7aa" }}>
+          <strong style={{ color: "#9a3412" }}>6. Ograniczenie odpowiedzialności</strong>
+          <p style={{ margin: "4px 0 0" }}>System KSeF podlega dynamicznym zmianom i przerwom technicznym (tzw. tryb offline). Moje analizy opierają się na aktualnie dostępnych specyfikacjach MF, jednak nie gwarantuję 100% bezbłędności w przypadku nagłych zmian w infrastrukturze rządowej. Korzystanie z narzędzia odbywa się na własne ryzyko użytkownika.</p>
         </div>
       </div>
       <button onClick={onClose} style={{ marginTop: 20, width: "100%", background: "#7B2D52", color: "white", border: "none", borderRadius: 12, padding: "11px", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", fontFamily: "inherit" }}>Rozumiem, zaczynamy!</button>
@@ -493,7 +497,7 @@ export default function GlowaDoksef() {
         <div style={{ background: "white", borderRadius: (imagePreview || image?.isPdf) ? "0 0 20px 20px" : 20, padding: "8px 8px 8px 16px", display: "flex", alignItems: "flex-end", gap: 8, boxShadow: "0 4px 24px rgba(99,102,241,0.15)", border: "1.5px solid #e0e7ff" }}>
           <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" style={{ display: "none" }} onChange={handleImageUpload} />
           <button onClick={() => fileInputRef.current?.click()} title={isPaid ? "Wyślij fakturę do analizy" : "Dostępne w płatnych planach"} style={{ background: isPaid ? "#f5f3ff" : "#f9fafb", border: "1.5px solid " + (isPaid ? "#c7d2fe" : "#e5e7eb"), borderRadius: 12, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: isPaid ? "pointer" : "not-allowed", flexShrink: 0, fontSize: "1rem", color: isPaid ? "#6366f1" : "#d1d5db" }}>📎</button>
-          <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKey} placeholder={isPaid ? "Napisz pytanie lub wyślij zdjęcie faktury..." : "Napisz pytanie o KSeF, błąd, problem..."} disabled={loading} rows={1} style={{ flex: 1, border: "none", background: "transparent", resize: "none", fontSize: "0.9rem", fontFamily: "inherit", color: "#1e1b4b", padding: "6px 0", lineHeight: 1.5, maxHeight: 120, overflowY: "auto" }} onInput={(e) => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }} />
+          <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKey} placeholder={isPaid ? "Napisz pytanie lub wyślij zdjęcie faktury..." : "Napisz pytanie o KSeF, błąd, problem..."} disabled={loading} rows={1} style={{ flex: 1, border: "none", background: "transparent", resize: "none", fontSize: "0.9rem", fontFamily: "inherit", color: "#1e1b4b", padding: "6px 0", lineHeight: 1.5, maxHeight: 72, overflowY: "auto" }} onInput={(e) => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 72) + "px"; }} />
           <button className="send-btn" onClick={() => sendMessage()} disabled={loading || (!input.trim() && !image)} style={{ background: (loading || (!input.trim() && !image)) ? "#c7d2fe" : "#4f46e5", color: "white", border: "none", borderRadius: 14, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", cursor: (loading || (!input.trim() && !image)) ? "not-allowed" : "pointer", transition: "background 0.2s", flexShrink: 0, fontSize: "1rem" }}>{loading ? "⏳" : "↑"}</button>
         </div>
         <p style={{ textAlign: "center", margin: "8px 0 0", fontSize: "0.72rem", color: "#a5b4fc" }}>AI może generować błędy. W ważnych sprawach zawsze skonsultuj się z księgowym lub doradcą podatkowym.</p>

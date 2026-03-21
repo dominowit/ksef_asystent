@@ -346,7 +346,7 @@ Datą wystawienia faktury jest data jej PRZESŁANIA do KSeF (data kliknięcia "w
 Zależy kto kupił. Klient prywatny (B2C) — KSeF nie dotyczy, do paczki wrzucasz paragon lub fakturę PDF jak dawniej. Firma (B2B) — faktura idzie przez KSeF. Do paczki nie trzeba nic wkładać — nabywca odbiera fakturę w KSeF. Opcjonalnie można dodać wizualizację e-faktury z kodem QR.
 
 ### 11. Import usług (Facebook, Google) — dokument WEW i KSeF
-Do KSeF NIE wysyła się dokumentów wewnętrznych (WEW) ani raportów z kasy (RO). KSeF służy wyłącznie do faktur między odrębnymi podmiotami. Faktura z Facebooka (import usług z Irlandii) zostaje zaksięgowana w JPK po staremu jako WEW — poza KSeF.
+Do KSeF NIE wysyła się dokumentów wewnętrznych (WEW) ani raportów z kasy (RO). KSeF służy wyłącznie do faktur między odrębnymi podmiotami. Faktura z Facebooka (import usług z Irlandii) zostaje zaksięgowana w JPK po staremu jako WEW — poza KSeF. UWAGA na JPK_V7(3): raport RO od lutego 2026 musi mieć dwa oznaczenia jednocześnie — RO i DI. To nowa zasada od wersji 3 struktury JPK.
 
 ### 12. Faktura VAT RR — rolnik ryczałtowy i KSeF
 KSeF dla faktur VAT RR jest DOBROWOLNY — decyzja należy do rolnika ryczałtowego.

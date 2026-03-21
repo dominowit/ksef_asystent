@@ -14,7 +14,7 @@ const QUICK_QUESTIONS = [
 const TypingIndicator = () => (
   <div style={{ display: "flex", gap: "5px", alignItems: "center", padding: "4px 0" }}>
     {[0, 1, 2].map((i) => (
-      <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "#6366f1", animation: "bounce 1.2s infinite", animationDelay: `${i * 0.2}s` }} />
+      <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "#7B2D52", animation: "bounce 1.2s infinite", animationDelay: `${i * 0.2}s` }} />
     ))}
   </div>
 );
@@ -125,17 +125,17 @@ const PricingModal = ({ onClose, onEnterToken, showTokenField }) => {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
           {PLANS.map(plan => (
-            <div key={plan.id} onClick={() => setSelectedPlan(plan.id)} style={{ border: selectedPlan === plan.id ? "2px solid #4f46e5" : "2px solid #e0e7ff", borderRadius: 12, padding: "12px 16px", cursor: "pointer", background: selectedPlan === plan.id ? "#f5f3ff" : "white" }}>
+            <div key={plan.id} onClick={() => setSelectedPlan(plan.id)} style={{ border: selectedPlan === plan.id ? "2px solid #7B2D52" : "2px solid #e8d0da", borderRadius: 12, padding: "12px 16px", cursor: "pointer", background: selectedPlan === plan.id ? "#f9f0f4" : "white" }}>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <div style={{ fontWeight: 700, color: "#1e1b4b" }}>{plan.name}</div>
-                <div style={{ fontWeight: 700, color: "#4f46e5" }}>{plan.price}</div>
+                <div style={{ fontWeight: 700, color: "#7B2D52" }}>{plan.price}</div>
               </div>
               <div style={{ color: "#6b7280", fontSize: "0.8rem", marginTop: 3 }}>{plan.desc}</div>
             </div>
           ))}
         </div>
         <p style={{ margin: "0 0 10px", fontSize: "0.75rem", color: "#9ca3af", textAlign: "center" }}>Podczas analizy faktur analizuję strukturę pliku, nie gromadzę Twoich danych sprzedażowych.</p>
-        <a href={PLANS.find(p => p.id === selectedPlan)?.link} target="_blank" rel="noopener noreferrer" style={{ display: "block", width: "100%", background: "#4f46e5", color: "white", borderRadius: 12, padding: "12px", fontWeight: 700, fontSize: "0.95rem", textAlign: "center", textDecoration: "none", marginBottom: 8 }}>
+        <a href={PLANS.find(p => p.id === selectedPlan)?.link} target="_blank" rel="noopener noreferrer" style={{ display: "block", width: "100%", background: "#7B2D52", color: "white", borderRadius: 12, padding: "12px", fontWeight: 700, fontSize: "0.95rem", textAlign: "center", textDecoration: "none", marginBottom: 8 }}>
           Zapłać — {PLANS.find(p => p.id === selectedPlan)?.price}
         </a>
         <p style={{ margin: "0 0 16px", fontSize: "0.75rem", color: "#9ca3af", textAlign: "center" }}>
@@ -146,7 +146,7 @@ const PricingModal = ({ onClose, onEnterToken, showTokenField }) => {
             <p style={{ margin: "0 0 8px", fontSize: "0.82rem", color: "#6b7280", textAlign: "center" }}>Masz już kod dostępu?</p>
             <div style={{ display: "flex", gap: 8 }}>
               <input value={token} onChange={(e) => setToken(e.target.value)} placeholder="Wpisz kod" style={{ flex: 1, padding: "8px 12px", borderRadius: 10, border: "1.5px solid #e0e7ff", fontSize: "0.88rem", fontFamily: "inherit" }} />
-              <button onClick={() => token.trim() && onEnterToken(token.trim())} style={{ background: "#4f46e5", color: "white", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontWeight: 600 }}>Wejdź</button>
+              <button onClick={() => token.trim() && onEnterToken(token.trim())} style={{ background: "#7B2D52", color: "white", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontWeight: 600 }}>Wejdź</button>
             </div>
           </div>
         )}
@@ -184,7 +184,7 @@ const SafetyModal = ({ onClose }) => (
           <p style={{ margin: "4px 0 0" }}>Nigdy nie wpisuj w oknie czatu haseł ani tokenów autoryzacyjnych do bramki Ministerstwa Finansów. Ja ich nie potrzebuję, by Ci pomóc. Jeśli przez pomyłkę wkleisz taki kod, dla bezpieczeństwa natychmiast wygeneruj nowy token w systemie rządowym.</p>
         </div>
       </div>
-      <button onClick={onClose} style={{ marginTop: 20, width: "100%", background: "#4f46e5", color: "white", border: "none", borderRadius: 12, padding: "11px", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", fontFamily: "inherit" }}>Rozumiem, zaczynamy!</button>
+      <button onClick={onClose} style={{ marginTop: 20, width: "100%", background: "#7B2D52", color: "white", border: "none", borderRadius: 12, padding: "11px", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", fontFamily: "inherit" }}>Rozumiem, zaczynamy!</button>
     </div>
   </div>
 );
@@ -430,7 +430,7 @@ export default function GlowaDoksef() {
             {msg.role === "assistant" && (
               <div style={{ width: 42, height: 42, borderRadius: "50%", overflow: "hidden", flexShrink: 0, marginRight: 10, marginTop: 4, boxShadow: "0 2px 8px rgba(99,102,241,0.3)" }}><img src="/avatar.png" alt="bot" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
             )}
-            <div style={{ maxWidth: "78%", background: msg.content === "paywall" ? "transparent" : msg.role === "user" ? "linear-gradient(135deg, #4f46e5, #6366f1)" : "white", color: msg.role === "user" ? "white" : "#1e1b4b", borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px", padding: msg.content === "paywall" ? "0" : "12px 16px", fontSize: "0.88rem", lineHeight: 1.65, boxShadow: msg.content === "paywall" ? "none" : msg.role === "user" ? "0 4px 12px rgba(79,70,229,0.3)" : "0 2px 12px rgba(0,0,0,0.07)" }}>
+            <div style={{ maxWidth: "78%", background: msg.content === "paywall" ? "transparent" : msg.role === "user" ? "linear-gradient(135deg, #7B2D52, #5C1F3B)" : "white", color: msg.role === "user" ? "white" : "#1e1b4b", borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px", padding: msg.content === "paywall" ? "0" : "12px 16px", fontSize: "0.88rem", lineHeight: 1.65, boxShadow: msg.content === "paywall" ? "none" : msg.role === "user" ? "0 4px 12px rgba(123,45,82,0.3)" : "0 2px 12px rgba(0,0,0,0.07)" }}>
               {msg.hasImage && msg.imagePreview && <img src={msg.imagePreview} alt="faktura" style={{ maxWidth: "100%", borderRadius: 8, marginBottom: 8, display: "block" }} />}
               {msg.role === "assistant" && msg.content === "onboarding" ? (
                 <div>

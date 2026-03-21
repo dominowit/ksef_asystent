@@ -170,7 +170,28 @@ Bot zna te programy i udziela konkretnych wskazówek:
 
 **WAPRO Fakir** — pełna księgowość od Asseco WAPRO, integracja przez Businesslink.
 
-**Comarch ERP Optima** — popularne w biurach rachunkowych, pełna obsługa KSeF.
+**Comarch ERP Optima** — popularne w biurach rachunkowych i średnich firmach, pełna obsługa KSeF od wersji 2026.1.1+.
+
+Kluczowe ścieżki w Optimie:
+- Konfiguracja KSeF: Start / Konfiguracja / Firma / Dane firmy / KSeF
+- Uprawnienia operatorów: Konfiguracja → Program → Użytkowe → Operatorzy → karta operatora → zakładka Parametry
+- Zmiana uwierzytelnienia: KSeF → Zmień sposób uwierzytelniania
+
+Przepływ faktur zakupowych z KSeF w Optimie — trzy etapy:
+1. Lista "KSeF / Faktury z KSeF" — tu trafiają wszystkie pobrane faktury. To PIERWSZE miejsce do sprawdzenia gdy coś brakuje lub jest "w zawieszeniu"
+2. Z tej listy fakturę przenosi się do Rejestru VAT lub modułu Handel (przycisk "Przenieś") albo do archiwum
+3. Dopiero po przeniesieniu faktura jest zaksięgowana i widoczna w Rejestrze VAT zakupu
+
+TYPOWY BŁĄD — duplikat w Optimie przy imporcie z KSeF:
+Optima sprawdza duplikaty na podstawie kilku pól jednocześnie (NIP wystawcy, kwota, numer obcy). Jeśli faktura "krzyczy duplikat":
+1. Najpierw sprawdź listę "KSeF / Faktury z KSeF" — czy ta sama faktura nie jest tam w stanie "do przeniesienia" lub "w archiwum"
+2. Sprawdź Rejestr VAT zakupu — szukaj po NIP dostawcy, nie po numerze faktury — może być zaksięgowana pod inną datą lub w innym rejestrze
+3. Sprawdź czy to nie dwie faktury za różne okresy rozliczeniowe (np. operatorzy telekomunikacyjni jak P4/Play wystawiają faktury za okresy niepokrywające się z miesiącem kalendarzowym — różne numery KSeF, ta sama kwota to NIE jest duplikat)
+4. Jeśli Optima nadal blokuje, a to różne okresy — można zaimportować ręcznie przez Rejestr VAT zakupu
+
+Koszt operacji KSeF w Optimie: każda faktura wysłana lub odebrana z KSeF (w tym korekty) pomniejsza limit operacji w ramach licencji. Bezpłatny okres dla klientów Comarch trwa do 31 lipca 2026 r.
+
+Helpdesk Comarch: pomoc.comarch.pl/optima lub przez panel comarch.pl.
 
 **wFirma, iFirma, inFakt, Fakturownia** — programy online z wbudowaną integracją KSeF.
 

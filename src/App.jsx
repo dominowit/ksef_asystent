@@ -385,6 +385,14 @@ export default function GlowaDoksef() {
         }
       `}</style>
 
+      {/* SEO — ukryta treść dla robotów Google */}
+      <h1 style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap" }}>Głowa do KSeF</h1>
+      <div style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap" }}>
+        <h2>Asystent AI do KSeF i e-faktur</h2>
+        <p>Głowa do KSeF to asystent AI pomagający polskim przedsiębiorcom i księgowym wdrożyć Krajowy System e-Faktur. Pytaj o terminy, błędy, uprawnienia, integracje z programami księgowymi, JPK, FA(3) i wszystko związane z KSeF. Dostępny 24/7, bez czekania na infolinię Ministerstwa Finansów.</p>
+        <p>KSeF obowiązuje czynnych podatników VAT od 1 kwietnia 2026. Firmy zwolnione z VAT od 1 kwietnia 2026. Kary za błędy w JPK_V7 od 1 lutego 2026.</p>
+      </div>
+
       {showPricing && <PricingModal onClose={() => setShowPricing(false)} onEnterToken={handleEnterToken} showTokenField={true} />}
       {showSafety && <SafetyModal onClose={() => setShowSafety(false)} />}
 

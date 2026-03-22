@@ -149,15 +149,19 @@ export default async function handler(req, res) {
   }
 
   // Dodaj do Resend Audience
-  try {
-    await resend.contacts.create({
-      audienceId: process.env.RESEND_AUDIENCE_ID,
-      email: normalizedEmail,
-      unsubscribed: false,
-    });
-  } catch (audienceErr) {
-    // Nie blokuj — email już poszedł, audience to nice-to-have
-    console.warn("Resend audience error:", audienceErr.message);
+  if (!process.env.RESEND_AUDIENCE_ID) {
+    console.warn("Resend audience: brak RESEND_AUDIENCE_ID w env");
+  } else {
+    try {
+      const audienceResult = await resend.contacts.create({
+        audienceId: process.env.RESEND_AUDIENCE_ID,
+        email: normalizedEmail,
+        unsubscribed: false,
+      });
+      console.log("Resend audience OK:", JSON.stringify(audienceResult));
+    } catch (audienceErr) {
+      console.error("Resend audience BŁĄD:", audienceErr?.message, JSON.stringify(audienceErr));
+    }
   }
 
   return res.status(200).json({ ok: true, message: "Sprawdź skrzynkę — wysłaliśmy Ci link aktywacyjny." });

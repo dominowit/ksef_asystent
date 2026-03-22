@@ -280,10 +280,10 @@ export default function GlowaDoksef() {
   const [showPricing, setShowPricing] = useState(false);
   const [showSafety, setShowSafety] = useState(false);
   const [showTrialModal, setShowTrialModal] = useState(false);
-  const [trialSession, setTrialSession] = useState(() => typeof window !== "undefined" ? localStorage.getItem("ksef_trial_session") : null);
-  const [trialEmail, setTrialEmail] = useState(() => typeof window !== "undefined" ? localStorage.getItem("ksef_trial_email") : null);
-  const [trialExpiresAt, setTrialExpiresAt] = useState(() => typeof window !== "undefined" ? localStorage.getItem("ksef_trial_expires") : null);
-  const [userToken, setUserToken] = useState(() => typeof window !== "undefined" ? localStorage.getItem("ksef_token") : null);
+  const [trialSession, setTrialSession] = useState(() => localStorage.getItem("ksef_trial_session") || null);
+  const [trialEmail, setTrialEmail] = useState(() => localStorage.getItem("ksef_trial_email") || null);
+  const [trialExpiresAt, setTrialExpiresAt] = useState(() => localStorage.getItem("ksef_trial_expires") || null);
+  const [userToken, setUserToken] = useState(() => localStorage.getItem("ksef_token") || null);
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const messagesEndRef = useRef(null);
@@ -325,20 +325,13 @@ export default function GlowaDoksef() {
     }
   }, []);
 
-  const isTrial = !!trialSession && (!trialExpiresAt || new Date() < new Date(trialExpiresAt));
-  const hasFullAccess = isPaid || isTrial;
-
-  // Formatuj datę wygaśnięcia trialu do wyświetlenia
-  const trialExpiryDisplay = trialExpiresAt
-    ? new Date(trialExpiresAt).toLocaleDateString("pl-PL", { day: "numeric", month: "long" })
-    : null;
-
   // Pop-up trialu po 3 wiadomościach (tylko dla niezalogowanych bez trialu)
   useEffect(() => {
-    if (!isTrial && !isPaid && messageCount === 3) {
+    const isTrialActive = !!trialSession && (!trialExpiresAt || new Date() < new Date(trialExpiresAt));
+    if (!isTrialActive && !userToken && messageCount === 3) {
       setShowTrialModal(true);
     }
-  }, [messageCount, isTrial, isPaid]);
+  }, [messageCount, trialSession, trialExpiresAt, userToken]);
 
   useEffect(() => {
     if (loading) {
@@ -483,6 +476,13 @@ export default function GlowaDoksef() {
   };
 
   const isPaid = !!userToken;
+  const isTrial = !!trialSession && (!trialExpiresAt || new Date() < new Date(trialExpiresAt));
+  const hasFullAccess = isPaid || isTrial;
+
+  // Formatuj datę wygaśnięcia trialu do wyświetlenia
+  const trialExpiryDisplay = trialExpiresAt
+    ? new Date(trialExpiresAt).toLocaleDateString("pl-PL", { day: "numeric", month: "long" })
+    : null;
   const remainingFree = Math.max(0, FREE_LIMIT - messageCount);
   const resetText = (() => {
     if (!resetAt) return null;

@@ -297,6 +297,17 @@ export default async function handler(req, res) {
       // Nie blokuj — token już wystawiony, faktura może być wystawiona ręcznie
     }
 
+    // Oznacz trial jako converted jeśli ten email miał trial
+    await supabase
+      .from("trial_sessions")
+      .update({
+        status: "converted",
+        converted_to_plan: plan,
+        converted_at: new Date().toISOString(),
+      })
+      .eq("email", customerEmail)
+      .eq("status", "active");
+
     console.log(`✅ Nowa subskrypcja: token ${token} dla ${customerEmail} (${plan})`);
     return res.status(200).json({ received: true, token, plan });
   }

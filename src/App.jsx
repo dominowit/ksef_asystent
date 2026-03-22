@@ -193,6 +193,81 @@ const SafetyModal = ({ onClose }) => (
   </div>
 );
 
+const TrialModal = ({ onClose, onSuccess }) => {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState("idle"); // idle | loading | sent | error
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const handleSubmit = async () => {
+    if (!email.trim()) return;
+    setStatus("loading");
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/request-trial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setStatus("sent");
+      } else {
+        setStatus("error");
+        if (data.error === "already_active") setErrorMsg("Ten email ma już aktywny trial. Sprawdź skrzynkę — wysłaliśmy Ci wcześniej link.");
+        else if (data.error === "trial_used") setErrorMsg("Ten adres był już użyty do trialu. Zapraszamy do wyboru planu.");
+        else if (data.error === "converted") setErrorMsg("Ten email jest powiązany z aktywną subskrypcją.");
+        else setErrorMsg(data.error || "Coś poszło nie tak. Spróbuj ponownie.");
+      }
+    } catch {
+      setStatus("error");
+      setErrorMsg("Problem z połączeniem. Sprawdź internet i spróbuj ponownie.");
+    }
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(30,27,75,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 16 }} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div style={{ background: "white", borderRadius: 20, padding: "28px 24px", width: "100%", maxWidth: 400, boxShadow: "0 20px 60px rgba(99,102,241,0.3)" }}>
+        {status !== "sent" ? (
+          <>
+            <div style={{ textAlign: "center", marginBottom: 20 }}>
+              <div style={{ fontSize: "2rem", marginBottom: 8 }}>🎁</div>
+              <h2 style={{ margin: "0 0 6px", color: "#1e1b4b", fontSize: "1.2rem" }}>7 dni pełnego dostępu</h2>
+              <p style={{ margin: 0, color: "#6b7280", fontSize: "0.85rem", lineHeight: 1.6 }}>Podaj email, a wyślemy Ci link aktywacyjny. Bez karty kredytowej.</p>
+            </div>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              placeholder="twoj@email.pl"
+              style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid #c7d2fe", fontSize: "0.9rem", fontFamily: "inherit", boxSizing: "border-box", marginBottom: 10, outline: "none" }}
+            />
+            {errorMsg && <p style={{ margin: "0 0 10px", fontSize: "0.82rem", color: "#dc2626", textAlign: "center" }}>{errorMsg}</p>}
+            <button
+              onClick={handleSubmit}
+              disabled={status === "loading" || !email.trim()}
+              style={{ width: "100%", background: status === "loading" ? "#c7d2fe" : "#4f46e5", color: "white", border: "none", borderRadius: 12, padding: "12px", fontWeight: 700, fontSize: "0.95rem", cursor: status === "loading" ? "not-allowed" : "pointer", fontFamily: "inherit", marginBottom: 12 }}
+            >
+              {status === "loading" ? "Wysyłanie..." : "Wyślij link aktywacyjny →"}
+            </button>
+            <p style={{ margin: "0 0 10px", fontSize: "0.72rem", color: "#9ca3af", textAlign: "center", lineHeight: 1.5 }}>
+              Podając email, dołączasz do newslettera z poradami KSeF. Możesz wypisać się w każdej chwili.
+            </p>
+            <button onClick={onClose} style={{ width: "100%", background: "none", border: "none", color: "#9ca3af", fontSize: "0.82rem", cursor: "pointer", fontFamily: "inherit" }}>Nie teraz</button>
+          </>
+        ) : (
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: "2.5rem", marginBottom: 12 }}>📬</div>
+            <h2 style={{ margin: "0 0 8px", color: "#1e1b4b", fontSize: "1.1rem" }}>Sprawdź skrzynkę!</h2>
+            <p style={{ margin: "0 0 16px", color: "#6b7280", fontSize: "0.85rem", lineHeight: 1.6 }}>Wysłaliśmy Ci link aktywacyjny. Kliknij go, żeby uruchomić 7 dni dostępu. Jeśli nie widzisz — sprawdź spam.</p>
+            <button onClick={onClose} style={{ background: "#4f46e5", color: "white", border: "none", borderRadius: 12, padding: "10px 24px", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", fontFamily: "inherit" }}>OK, zamknij</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default function GlowaDoksef() {
   const [messages, setMessages] = useState([{ role: "assistant", content: "onboarding" }]);
   const [input, setInput] = useState("");
@@ -204,6 +279,10 @@ export default function GlowaDoksef() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [showPricing, setShowPricing] = useState(false);
   const [showSafety, setShowSafety] = useState(false);
+  const [showTrialModal, setShowTrialModal] = useState(false);
+  const [trialSession, setTrialSession] = useState(() => localStorage.getItem("ksef_trial_session") || null);
+  const [trialEmail, setTrialEmail] = useState(() => localStorage.getItem("ksef_trial_email") || null);
+  const [trialExpiresAt, setTrialExpiresAt] = useState(() => localStorage.getItem("ksef_trial_expires") || null);
   const [userToken, setUserToken] = useState(() => localStorage.getItem("ksef_token") || null);
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -212,6 +291,55 @@ export default function GlowaDoksef() {
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const paywallRef = useRef(null);
+
+  // Obsługa magic linka — wyciągnij parametry z URL po kliknięciu linka aktywacyjnego
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionFromUrl = params.get("trial_session");
+    const emailFromUrl = params.get("trial_email");
+    const trialError = params.get("trial_error");
+
+    if (sessionFromUrl && emailFromUrl) {
+      // Zapisz sesję trial w localStorage
+      localStorage.setItem("ksef_trial_session", sessionFromUrl);
+      localStorage.setItem("ksef_trial_email", decodeURIComponent(emailFromUrl));
+      setTrialSession(sessionFromUrl);
+      setTrialEmail(decodeURIComponent(emailFromUrl));
+      // Wyczyść URL żeby nie było widać tokenu
+      window.history.replaceState({}, "", "/");
+    }
+
+    if (trialError) {
+      // Pokaż stosowny komunikat w zależności od błędu
+      const errorMessages = {
+        expired: "Link aktywacyjny wygasł (ważny 24h). Wpisz email ponownie, żeby otrzymać nowy.",
+        link_expired: "Link aktywacyjny wygasł (ważny 24h). Wpisz email ponownie, żeby otrzymać nowy.",
+        invalid_token: "Nieprawidłowy link aktywacyjny. Spróbuj ponownie.",
+        converted: "Ten email ma już aktywną subskrypcję.",
+        missing_token: "Brak tokenu w linku. Spróbuj ponownie.",
+      };
+      const msg = errorMessages[trialError] || "Coś poszło nie tak z aktywacją trialu.";
+      setShowTrialModal(true); // otwórz modal z komunikatem błędu
+      console.warn("Trial error:", trialError, msg);
+      window.history.replaceState({}, "", "/");
+    }
+  }, []);
+
+  // Pop-up trialu po 3 wiadomościach (tylko dla niezalogowanych bez trialu)
+  useEffect(() => {
+    const isTrial = !!trialSession;
+    const isPaid = !!userToken;
+  const isTrial = !!trialSession && (!trialExpiresAt || new Date() < new Date(trialExpiresAt));
+  const hasFullAccess = isPaid || isTrial;
+
+  // Formatuj datę wygaśnięcia trialu do wyświetlenia
+  const trialExpiryDisplay = trialExpiresAt
+    ? new Date(trialExpiresAt).toLocaleDateString("pl-PL", { day: "numeric", month: "long" })
+    : null;
+    if (!isTrial && !isPaid && messageCount === 3) {
+      setShowTrialModal(true);
+    }
+  }, [messageCount, trialSession, userToken]);
 
   useEffect(() => {
     if (loading) {
@@ -356,6 +484,13 @@ export default function GlowaDoksef() {
   };
 
   const isPaid = !!userToken;
+  const isTrial = !!trialSession && (!trialExpiresAt || new Date() < new Date(trialExpiresAt));
+  const hasFullAccess = isPaid || isTrial;
+
+  // Formatuj datę wygaśnięcia trialu do wyświetlenia
+  const trialExpiryDisplay = trialExpiresAt
+    ? new Date(trialExpiresAt).toLocaleDateString("pl-PL", { day: "numeric", month: "long" })
+    : null;
   const remainingFree = Math.max(0, FREE_LIMIT - messageCount);
   const resetText = (() => {
     if (!resetAt) return null;
@@ -398,6 +533,7 @@ export default function GlowaDoksef() {
       </div>
 
       {showPricing && <PricingModal onClose={() => setShowPricing(false)} onEnterToken={handleEnterToken} showTokenField={true} />}
+      {showTrialModal && <TrialModal onClose={() => setShowTrialModal(false)} onSuccess={() => setShowTrialModal(false)} />}
       {showSafety && <SafetyModal onClose={() => setShowSafety(false)} />}
 
       <div style={{ width: "100%", background: "linear-gradient(135deg, #4c0519, #881337, #be123c)", padding: "20px 20px 11px", textAlign: "center", position: "sticky", top: 0, zIndex: 10, boxShadow: "0 4px 20px rgba(79,70,229,0.25)", overflow: "visible" }}>
@@ -422,6 +558,11 @@ export default function GlowaDoksef() {
         <p className="header-subtitle" style={{ margin: "4px 0 0", color: "#c7d2fe", fontSize: "0.85rem", fontWeight: 300 }}>e-Faktury po ludzku • Przepisy bez stresu • Wsparcie psychologiczne</p>
         {isPaid && (
           <div style={{ marginTop: 10, background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "4px 14px", display: "inline-block", fontSize: "0.78rem", color: "#a5f3fc" }}>Pełny dostęp</div>
+        )}
+        {isTrial && !isPaid && (
+          <div style={{ marginTop: 10, background: "rgba(251,191,36,0.25)", borderRadius: 20, padding: "4px 14px", display: "inline-block", fontSize: "0.78rem", color: "#fef08a" }}>
+            Trial{trialExpiryDisplay ? ` — dostęp do ${trialExpiryDisplay}` : ""}
+          </div>
         )}
       </div>
 
@@ -496,8 +637,8 @@ export default function GlowaDoksef() {
         )}
         <div style={{ background: "white", borderRadius: (imagePreview || image?.isPdf) ? "0 0 20px 20px" : 20, padding: "8px 8px 8px 16px", display: "flex", alignItems: "flex-end", gap: 8, boxShadow: "0 4px 24px rgba(99,102,241,0.15)", border: "1.5px solid #e0e7ff" }}>
           <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" style={{ display: "none" }} onChange={handleImageUpload} />
-          <button onClick={() => fileInputRef.current?.click()} title={isPaid ? "Wyślij fakturę do analizy" : "Dostępne w płatnych planach"} style={{ background: isPaid ? "#f5f3ff" : "#f9fafb", border: "1.5px solid " + (isPaid ? "#c7d2fe" : "#e5e7eb"), borderRadius: 12, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: isPaid ? "pointer" : "not-allowed", flexShrink: 0, fontSize: "1rem", color: isPaid ? "#6366f1" : "#d1d5db" }}>📎</button>
-          <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKey} placeholder={isPaid ? "Napisz pytanie lub wyślij zdjęcie faktury..." : "Napisz pytanie o KSeF, błąd, problem..."} disabled={loading} rows={1} style={{ flex: 1, border: "none", background: "transparent", resize: "none", fontSize: "0.9rem", fontFamily: "inherit", color: "#1e1b4b", padding: "6px 0", lineHeight: 1.5, maxHeight: 72, overflowY: "auto" }} onInput={(e) => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 72) + "px"; }} />
+          <button onClick={() => fileInputRef.current?.click()} title={hasFullAccess ? "Wyślij fakturę do analizy" : "Dostępne w płatnych planach"} style={{ background: hasFullAccess ? "#f5f3ff" : "#f9fafb", border: "1.5px solid " + (hasFullAccess ? "#c7d2fe" : "#e5e7eb"), borderRadius: 12, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: hasFullAccess ? "pointer" : "not-allowed", flexShrink: 0, fontSize: "1rem", color: hasFullAccess ? "#6366f1" : "#d1d5db" }}>📎</button>
+          <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKey} placeholder={hasFullAccess ? "Napisz pytanie lub wyślij zdjęcie faktury..." : "Napisz pytanie o KSeF, błąd, problem..."} disabled={loading} rows={1} style={{ flex: 1, border: "none", background: "transparent", resize: "none", fontSize: "0.9rem", fontFamily: "inherit", color: "#1e1b4b", padding: "6px 0", lineHeight: 1.5, maxHeight: 72, overflowY: "auto" }} onInput={(e) => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 72) + "px"; }} />
           <button className="send-btn" onClick={() => sendMessage()} disabled={loading || (!input.trim() && !image)} style={{ background: (loading || (!input.trim() && !image)) ? "#c7d2fe" : "#4f46e5", color: "white", border: "none", borderRadius: 14, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", cursor: (loading || (!input.trim() && !image)) ? "not-allowed" : "pointer", transition: "background 0.2s", flexShrink: 0, fontSize: "1rem" }}>{loading ? "⏳" : "↑"}</button>
         </div>
         <p style={{ textAlign: "center", margin: "8px 0 0", fontSize: "0.72rem", color: "#a5b4fc" }}>AI może generować błędy. W ważnych sprawach zawsze skonsultuj się z księgowym lub doradcą podatkowym.</p>

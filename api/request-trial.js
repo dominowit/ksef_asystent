@@ -133,7 +133,7 @@ export default async function handler(req, res) {
             </p>
             <hr style="border: none; border-top: 1px solid #e0e7ff; margin: 20px 0;" />
             <p style="margin: 0; font-size: 0.78rem; color: #9ca3af;">
-              Podając adres email, dołączyłeś do newslettera z poradami KSeF.
+              Podając adres email, dołączyłeś do newslettera Głowy do KSeF.
               Możesz wypisać się w każdej chwili, klikając "Wypisz się" w stopce kolejnych wiadomości.
               Pytania: <a href="mailto:kontakt@glowadoksef.pl" style="color: #6366f1;">kontakt@glowadoksef.pl</a>
             </p>

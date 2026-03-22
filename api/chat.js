@@ -11,7 +11,7 @@ const PLAN_LIMITS = {
   firma: 2000,
 };
 
-// Weryfikacja tokenu w Supabase (zastępuje hardkodowany PAID_TOKENS)
+// Weryfikacja tokenu płatnego planu w Supabase
 async function verifyToken(token) {
   if (!token) return null;
 
@@ -29,6 +29,37 @@ async function verifyToken(token) {
 
   if (error || !data) return null;
   return data.plan; // "solo" | "small" | "firma"
+}
+
+// Weryfikacja sesji trial w Supabase
+async function verifyTrialSession(sessionToken, fingerprint) {
+  if (!sessionToken) return null;
+
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY
+  );
+
+  const { data, error } = await supabase
+    .from("trial_sessions")
+    .select("status, trial_expires_at, email, fingerprint")
+    .eq("session_token", sessionToken)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  // Sprawdź czy trial nie wygasł
+  if (new Date() > new Date(data.trial_expires_at)) {
+    // Oznacz jako wygasły
+    await supabase
+      .from("trial_sessions")
+      .update({ status: "expired" })
+      .eq("session_token", sessionToken);
+    return null;
+  }
+
+  return { email: data.email, trialExpiresAt: data.trial_expires_at };
 }
 
 const SYSTEM_PROMPT = `Jesteś Asystentem KSeF — pomagasz małym firmom wdrożyć e-faktury i rozumieć przepisy. Jesteś po stronie użytkownika, nie systemu. Widzisz absurdy KSeF i nie udajesz, że ich nie ma.
@@ -548,7 +579,7 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  const { messages, userToken, hasImage } = req.body;
+  const { messages, userToken, trialSession, hasImage } = req.body;
 
   // Generuj fingerprint po stronie serwera z IP + user agent
   const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim()
@@ -574,8 +605,15 @@ export default async function handler(req, res) {
   const plan = await verifyToken(userToken);
   const isPaid = plan !== null;
 
+  // Sprawdź trial sesję (jeśli nie ma płatnego planu)
+  const trialData = !isPaid ? await verifyTrialSession(trialSession, fingerprint) : null;
+  const isTrial = trialData !== null;
+
+  // Trial traktujemy jak płatny dostęp (pełne możliwości, bez limitu wiadomości)
+  const hasFullAccess = isPaid || isTrial;
+
   // Freemium: sprawdź licznik po stronie serwera
-  if (!isPaid) {
+  if (!hasFullAccess) {
     {
 
     // Pobierz lub utwórz rekord dla tego fingerprintu
@@ -605,7 +643,7 @@ export default async function handler(req, res) {
   }
 
   // Płatne plany: sprawdź limit wiadomości (monthly reset można dodać później)
-  if (isPaid && plan in PLAN_LIMITS) {
+  if (isPaid && plan && plan in PLAN_LIMITS) {
     const { data: tokenData } = await supabase.from("paid_tokens").select("monthly_count, count_reset_at").eq("token", userToken.toUpperCase()).single();
 
     const now = new Date();
@@ -631,8 +669,8 @@ export default async function handler(req, res) {
     }).eq("token", userToken.toUpperCase());
   }
 
-  // Blokuj zdjęcia na darmowym planie
-  if (!isPaid && hasImage) {
+  // Blokuj zdjęcia na darmowym planie (trial ma dostęp do analizy faktur)
+  if (!hasFullAccess && hasImage) {
     return res.status(403).json({ error: "upgrade_required", message: "Analiza faktur dostępna tylko w płatnych planach." });
   }
 
@@ -665,7 +703,10 @@ export default async function handler(req, res) {
     }
 
     const reply = data.content?.[0]?.text || "Przepraszam, wystąpił problem. Spróbuj ponownie.";
-    return res.status(200).json({ reply });
+    return res.status(200).json({
+      reply,
+      ...(isTrial && { trialExpiresAt: trialData.trialExpiresAt }),
+    });
 
   } catch (err) {
     console.error("Server error:", err);

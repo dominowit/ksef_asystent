@@ -116,13 +116,76 @@ const PlanLimitMessage = ({ resetDate }) => (
 const PricingModal = ({ onClose, onEnterToken, showTokenField }) => {
   const [token, setToken] = useState("");
   const [selectedPlan, setSelectedPlan] = useState("solo");
+  const [trialEmail, setTrialEmail] = useState("");
+  const [trialStatus, setTrialStatus] = useState("idle"); // idle | loading | sent | error
+  const [trialError, setTrialErrorMsg] = useState("");
+
+  const handleTrialSubmit = async () => {
+    if (!trialEmail.trim()) return;
+    setTrialStatus("loading");
+    setTrialErrorMsg("");
+    try {
+      const res = await fetch("/api/request-trial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trialEmail.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTrialStatus("sent");
+      } else {
+        setTrialStatus("error");
+        if (data.error === "already_active") setTrialErrorMsg("Ten email ma już aktywny trial. Sprawdź skrzynkę.");
+        else if (data.error === "trial_used") setTrialErrorMsg("Ten adres był już użyty do trialu. Wybierz plan poniżej.");
+        else if (data.error === "converted") setTrialErrorMsg("Ten email ma już aktywną subskrypcję.");
+        else setTrialErrorMsg(data.error || "Coś poszło nie tak. Spróbuj ponownie.");
+      }
+    } catch {
+      setTrialStatus("error");
+      setTrialErrorMsg("Problem z połączeniem. Spróbuj ponownie.");
+    }
+  };
+
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(30,27,75,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 }} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={{ background: "white", borderRadius: 20, padding: "28px 24px", width: "100%", maxWidth: 420, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(99,102,241,0.25)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <h2 style={{ margin: 0, color: "#1e1b4b", fontSize: "1.3rem" }}>Wybierz plan</h2>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: "1.3rem", padding: "0 4px" }}>✕</button>
         </div>
+
+        {/* Trial section */}
+        {trialStatus !== "sent" ? (
+          <div style={{ background: "linear-gradient(135deg, #eef2ff, #f5f3ff)", borderRadius: 14, padding: "14px 16px", marginBottom: 18, border: "1.5px solid #c7d2fe" }}>
+            <p style={{ margin: "0 0 4px", fontWeight: 700, color: "#1e1b4b", fontSize: "0.9rem" }}>🎁 Zacznij od 7 dni za darmo</p>
+            <p style={{ margin: "0 0 10px", fontSize: "0.78rem", color: "#6b7280" }}>Podaj email — wyślemy link aktywacyjny.</p>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                type="email"
+                value={trialEmail}
+                onChange={(e) => setTrialEmail(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleTrialSubmit()}
+                placeholder="twoj@email.pl"
+                style={{ flex: 1, padding: "8px 12px", borderRadius: 10, border: "1.5px solid #c7d2fe", fontSize: "0.85rem", fontFamily: "inherit", outline: "none" }}
+              />
+              <button
+                onClick={handleTrialSubmit}
+                disabled={trialStatus === "loading" || !trialEmail.trim()}
+                style={{ background: trialStatus === "loading" ? "#c7d2fe" : "#4f46e5", color: "white", border: "none", borderRadius: 10, padding: "8px 14px", fontWeight: 700, fontSize: "0.85rem", cursor: trialStatus === "loading" ? "not-allowed" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
+              >
+                {trialStatus === "loading" ? "..." : "Wyślij →"}
+              </button>
+            </div>
+            {trialStatus === "error" && <p style={{ margin: "6px 0 0", fontSize: "0.75rem", color: "#dc2626" }}>{trialError}</p>}
+            <p style={{ margin: "6px 0 0", fontSize: "0.7rem", color: "#9ca3af" }}>Podając email, dołączasz do newslettera Głowy do KSeF. Możesz wypisać się w każdej chwili.</p>
+          </div>
+        ) : (
+          <div style={{ background: "#f0fdf4", borderRadius: 14, padding: "14px 16px", marginBottom: 18, border: "1.5px solid #86efac", textAlign: "center" }}>
+            <p style={{ margin: "0 0 4px", fontWeight: 700, color: "#166534", fontSize: "0.9rem" }}>📬 Sprawdź skrzynkę!</p>
+            <p style={{ margin: 0, fontSize: "0.78rem", color: "#16a34a" }}>Link aktywacyjny wysłany. Jeśli nie widzisz — sprawdź spam.</p>
+          </div>
+        )}
+
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
           {PLANS.map(plan => (
             <div key={plan.id} onClick={() => setSelectedPlan(plan.id)} style={{ border: selectedPlan === plan.id ? "2px solid #7B2D52" : "2px solid #e8d0da", borderRadius: 12, padding: "12px 16px", cursor: "pointer", background: selectedPlan === plan.id ? "#f9f0f4" : "white" }}>

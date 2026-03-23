@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 
 const FREE_MESSAGE_LIMIT = 5;
+const TRIAL_MESSAGE_LIMIT = 100;
 const PLAN_LIMITS = {
   solo: 200,
   small: 600,
@@ -612,7 +613,28 @@ export default async function handler(req, res) {
   const isTrial = trialData !== null;
   console.log("chat.js: isTrial=", isTrial, "isPaid=", isPaid, "hasFullAccess=", isPaid || isTrial);
 
-  // Trial traktujemy jak płatny dostęp (pełne możliwości, bez limitu wiadomości)
+  // Trial — sprawdź limit wiadomości
+  if (isTrial) {
+    const { data: trialUsage } = await supabase
+      .from("trial_sessions")
+      .select("trial_message_count")
+      .eq("session_token", trialSession)
+      .single();
+
+    const trialCount = trialUsage?.trial_message_count || 0;
+    if (trialCount >= TRIAL_MESSAGE_LIMIT) {
+      return res.status(403).json({
+        error: "trial_limit_reached",
+        message: "Wykorzystałeś limit 100 wiadomości w trialu. Wybierz plan aby kontynuować."
+      });
+    }
+
+    await supabase
+      .from("trial_sessions")
+      .update({ trial_message_count: trialCount + 1 })
+      .eq("session_token", trialSession);
+  }
+
   const hasFullAccess = isPaid || isTrial;
 
   // Freemium: sprawdź licznik po stronie serwera

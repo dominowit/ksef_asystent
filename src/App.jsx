@@ -500,7 +500,7 @@ export default function GlowaDoksef() {
   const sendMessage = async (text) => {
     const userText = text || input.trim();
     if ((!userText && !image) || loading) return;
-    if (!userToken && messageCount >= FREE_LIMIT) {
+    if (!userToken && !isTrial && messageCount >= FREE_LIMIT) {
       setMessages(prev => [...prev, { role: "assistant", content: "paywall" }]);
       return;
     }

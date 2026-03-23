@@ -73,14 +73,16 @@ export default async function handler(req, res) {
       trial_starts_at: now.toISOString(),
       trial_expires_at: trialExpiresAt,
       session_token: sessionToken,
-      fingerprint, // zaktualizuj fingerprint — może być inny browser niż przy zapisie
+      fingerprint,
     })
     .eq("magic_token", token);
 
   if (updateError) {
-    console.error("Trial activate error:", updateError);
+    console.error("Trial activate error:", JSON.stringify(updateError));
     return res.redirect(`${process.env.APP_URL}?trial_error=server_error`);
   }
+
+  console.log(`Trial aktywowany: session_token=${sessionToken.slice(0,8)}... expires=${trialExpiresAt}`);
 
   // Przekieruj na stronę z session tokenem w URL
   // App.jsx przechwyci parametry i zapisze w localStorage

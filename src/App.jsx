@@ -246,6 +246,35 @@ const PricingModal = ({ onClose, onEnterToken }) => {
   );
 };
 
+const TrialLimitMessage = ({ onShowPlans }) => (
+  <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", borderRadius: "18px 18px 18px 4px", padding: "20px 20px 16px", color: "white", boxShadow: "0 4px 20px rgba(79,70,229,0.35)", maxWidth: "78%" }}>
+    <p style={{ margin: "0 0 6px", fontSize: "1.05rem", fontWeight: 700 }}>Twój trial dobiegł końca 🎓</p>
+    <p style={{ margin: "0 0 14px", fontSize: "0.85rem", color: "#c7d2fe", lineHeight: 1.6 }}>
+      Wykorzystałeś 100 wiadomości w ramach 7-dniowego trialu. Mamy nadzieję, że Głowa do KSeF okazała się pomocna — teraz czas na pełny dostęp.
+    </p>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
+      {[
+        "Bez limitów wiadomości — pytaj ile potrzebujesz.",
+        "Analiza faktur — prześlij plik, sprawdzimy błędy.",
+        "Dostęp 24/7 przez cały okres subskrypcji.",
+      ].map((item, i) => (
+        <div key={i} style={{ display: "flex", gap: 8, fontSize: "0.83rem", color: "#ddd6fe", lineHeight: 1.55 }}>
+          <span style={{ flexShrink: 0 }}>✅</span>
+          <span>{item}</span>
+        </div>
+      ))}
+    </div>
+    <div style={{ display: "flex", justifyContent: "center" }}>
+      <button
+        onClick={onShowPlans}
+        style={{ background: "linear-gradient(135deg, #6366f1, #4f46e5)", color: "white", border: "none", borderRadius: 14, padding: "12px 28px", fontWeight: 700, fontSize: "0.95rem", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 4px 14px rgba(99,102,241,0.5)" }}
+      >
+        Wybierz plan →
+      </button>
+    </div>
+  </div>
+);
+
 const SafetyModal = ({ onClose }) => (
   <div style={{ position: "fixed", inset: 0, background: "rgba(30,27,75,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 }} onClick={(e) => e.target === e.currentTarget && onClose()}>
     <div style={{ background: "white", borderRadius: 20, padding: "28px 24px", width: "100%", maxWidth: 460, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(99,102,241,0.25)" }}>
@@ -371,6 +400,7 @@ export default function GlowaDoksef() {
   const [showPricing, setShowPricing] = useState(false);
   const [showSafety, setShowSafety] = useState(false);
   const [showTrialModal, setShowTrialModal] = useState(false);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [trialSession, setTrialSession] = useState(() => localStorage.getItem("ksef_trial_session") || null);
   const [trialEmail, setTrialEmail] = useState(() => localStorage.getItem("ksef_trial_email") || null);
   const [trialExpiresAt, setTrialExpiresAt] = useState(() => localStorage.getItem("ksef_trial_expires") || null);
@@ -497,6 +527,25 @@ export default function GlowaDoksef() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const checkMessageCount = async () => {
+    try {
+      const res = await fetch("/api/chat-stats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userToken }),
+      });
+      const data = await res.json();
+      if (data.remaining !== undefined) {
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: `Pozostało Ci **${data.remaining}** z **${data.limit}** wiadomości w tym miesiącu. Limit odnowi się ${data.resetDate || "automatycznie"}.`
+        }]);
+      }
+    } catch {
+      setMessages(prev => [...prev, { role: "assistant", content: "Nie udało się pobrać informacji o limicie. Spróbuj ponownie." }]);
+    }
+  };
+
   const sendMessage = async (text) => {
     const userText = text || input.trim();
     if ((!userText && !image) || loading) return;
@@ -530,6 +579,7 @@ export default function GlowaDoksef() {
       const data = await response.json();
       if (response.status === 403) {
         if (data.error === "limit_reached") { setMessages(prev => [...prev, { role: "assistant", content: "paywall" }]); }
+        else if (data.error === "trial_limit_reached") { setMessages(prev => [...prev, { role: "assistant", content: "trial_limit" }]); }
         else if (data.error === "upgrade_required") { setMessages(prev => [...prev, { role: "assistant", content: "Analiza faktur dostępna jest w płatnych planach." }]); setShowPaywall(true); }
         else if (data.error === "plan_limit_reached") { setMessages(prev => [...prev, { role: "assistant", content: "plan_limit", resetDate: data.resetDate }]); }
         else setMessages(prev => [...prev, { role: "assistant", content: data.message || "Brak dostępu." }]);
@@ -538,9 +588,9 @@ export default function GlowaDoksef() {
       if (!response.ok) { setMessages(prev => [...prev, { role: "assistant", content: "Problem z połączeniem. Spróbuj ponownie." }]); setLoading(false); return; }
       setMessages(prev => [...prev, { role: "assistant", content: data.reply }]);
       // Inkrementuj licznik dopiero po udanej odpowiedzi
-      if (!userToken) setMessageCount(c => c + 1);
-      // Jeśli to była ostatnia darmowa wiadomość, pokaż paywall zaraz po odpowiedzi
-      if (!userToken) {
+      if (!userToken && !isTrial) setMessageCount(c => c + 1);
+      // Jeśli to była ostatnia darmowa wiadomość, pokaż paywall (tylko bez trialu)
+      if (!userToken && !isTrial) {
         const newCount = messageCount + 1;
         if (newCount >= FREE_LIMIT) {
           setMessages(prev => [...prev, { role: "assistant", content: "paywall" }]);
@@ -630,9 +680,33 @@ export default function GlowaDoksef() {
           </button>
         )}
         {isPaid && (
-          <div style={{ position: "absolute", top: 14, right: 16, display: "flex", gap: 6 }}>
-            <a href="https://billing.stripe.com/p/login/cNi4gzcobg0R38C64Ocwg00" target="_blank" rel="noopener noreferrer" className="header-btn-small" style={{ background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit", textDecoration: "none" }}>Zarządzaj subskrypcją</a>
-            <button onClick={() => { setUserToken(null); localStorage.removeItem("ksef_token"); }} className="header-btn-small" style={{ background: "rgba(255,255,255,0.1)", border: "1.5px solid rgba(255,255,255,0.2)", borderRadius: 20, padding: "6px 10px", color: "rgba(255,255,255,0.7)", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit" }}>Wyloguj</button>
+          <div style={{ position: "absolute", top: 14, right: 16, display: "flex", gap: 6, alignItems: "center" }}>
+            <div style={{ position: "relative" }}>
+              <button
+                onClick={() => setShowAccountMenu(v => !v)}
+                className="header-btn-small"
+                style={{ background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "6px 14px", color: "white", fontSize: "0.78rem", cursor: "pointer", fontFamily: "inherit" }}
+              >Konto ▾</button>
+              {showAccountMenu && (
+                <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: "white", borderRadius: 12, boxShadow: "0 8px 24px rgba(0,0,0,0.15)", minWidth: 200, zIndex: 50, overflow: "hidden" }}>
+                  <button
+                    onClick={async () => { setShowAccountMenu(false); await checkMessageCount(); }}
+                    style={{ display: "block", width: "100%", padding: "11px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontSize: "0.83rem", color: "#1e1b4b", fontFamily: "inherit", borderBottom: "1px solid #f0f0f0" }}
+                  >📊 Ile wiadomości zostało?</button>
+                  <a
+                    href="https://billing.stripe.com/p/login/cNi4gzcobg0R38C64Ocwg00"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setShowAccountMenu(false)}
+                    style={{ display: "block", padding: "11px 16px", fontSize: "0.83rem", color: "#1e1b4b", textDecoration: "none", borderBottom: "1px solid #f0f0f0" }}
+                  >💳 Zarządzaj subskrypcją</a>
+                  <button
+                    onClick={() => { setShowAccountMenu(false); setUserToken(null); localStorage.removeItem("ksef_token"); }}
+                    style={{ display: "block", width: "100%", padding: "11px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontSize: "0.83rem", color: "#dc2626", fontFamily: "inherit" }}
+                  >Wyloguj</button>
+                </div>
+              )}
+            </div>
           </div>
         )}
         <img src="/logo.png" alt="Głowa do KSeF" style={{ width: 147, height: 147, objectFit: "contain", position: "absolute", left: "50%", transform: "translateX(-50%)", top: "30%", marginTop: -73, pointerEvents: "none" }} />
@@ -681,6 +755,8 @@ export default function GlowaDoksef() {
                 </div>
               ) : msg.role === "assistant" && msg.content === "plan_limit" ? (
                 <PlanLimitMessage resetDate={msg.resetDate} />
+              ) : msg.role === "assistant" && msg.content === "trial_limit" ? (
+                <TrialLimitMessage onShowPlans={() => setShowPricing(true)} />
               ) : msg.role === "assistant" && msg.content === "paywall" ? (
                 <PaywallChatMessage onShowPlans={() => setShowPricing(true)} resetText={resetText} />
               ) : msg.role === "assistant" ? formatMessage(msg.content) : msg.content}

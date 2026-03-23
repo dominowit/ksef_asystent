@@ -47,6 +47,7 @@ async function verifyTrialSession(sessionToken, fingerprint) {
     .eq("status", "active")
     .maybeSingle();
 
+  console.log("verifyTrialSession: sessionToken=", sessionToken.slice(0,8), "data=", data ? "found" : "null", "error=", error?.message);
   if (error || !data) return null;
 
   // Sprawdź czy trial nie wygasł
@@ -606,8 +607,10 @@ export default async function handler(req, res) {
   const isPaid = plan !== null;
 
   // Sprawdź trial sesję (jeśli nie ma płatnego planu)
+  console.log("chat.js: trialSession received:", trialSession ? trialSession.slice(0,8) + "..." : "null");
   const trialData = !isPaid ? await verifyTrialSession(trialSession, fingerprint) : null;
   const isTrial = trialData !== null;
+  console.log("chat.js: isTrial=", isTrial, "isPaid=", isPaid, "hasFullAccess=", isPaid || isTrial);
 
   // Trial traktujemy jak płatny dostęp (pełne możliwości, bez limitu wiadomości)
   const hasFullAccess = isPaid || isTrial;

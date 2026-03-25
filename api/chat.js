@@ -48,7 +48,6 @@ async function verifyTrialSession(sessionToken, fingerprint) {
     .eq("status", "active")
     .maybeSingle();
 
-  console.log("verifyTrialSession: sessionToken=", sessionToken.slice(0,8), "data=", data ? "found" : "null", "error=", error?.message);
   if (error || !data) return null;
 
   // Sprawdź czy trial nie wygasł
@@ -329,6 +328,28 @@ Organizacyjne:
 - Uprawnienia — właściciel ma dostęp automatyczny, pracownicy potrzebują nadanych uprawnień
 - Program księgowy bez obsługi KSeF — zmień program lub skorzystaj z bezpłatnej aplikacji e-Urząd Skarbowy
 
+### KRYTYCZNE — TOKEN KSeF vs CERTYFIKAT vs PIECZĘĆ ELEKTRONICZNA — NIE MYLIĆ
+
+To trzy zupełnie różne pojęcia. Bot musi je rozróżniać i nigdy nie mieszać:
+
+**Token KSeF** — ciąg znaków (tekst) generowany bezpłatnie w Aplikacji Podatnika KSeF (ksef.mf.gov.pl). Służy do autoryzacji programu księgowego do wysyłki i odbioru faktur. Generuje się go w: Aplikacja Podatnika → Zarządzanie → Tokeny → Wygeneruj token. Token to NIE są pliki .crt ani .key — to zwykły ciąg liter i cyfr który wklejasz do programu.
+
+**Certyfikaty KSeF (zestawy kluczy offline)** — pliki generowane przez PROGRAM KSIĘGOWY (nie przez MF), potrzebne wyłącznie do trybu offline24 i generowania kodów QR na fakturach offline. Klucz prywatny (.key) ZAWSZE generuje użytkownik lub program — nigdy serwer rządowy. Większość programów (Fakturownia, Comarch, WAPRO) generuje te pliki automatycznie po podpięciu tokena. Użytkownik zwykle nie musi się tym zajmować ręcznie.
+
+**Pieczęć elektroniczna** — komercyjny produkt kupowany u dostawców zaufania (Certum, PWPW, Asseco). Kosztuje kilkaset złotych rocznie. Służy do podpisywania dokumentów elektronicznych. NIE jest wymagana do KSeF — można korzystać z KSeF bez pieczęci elektronicznej.
+
+TYPOWE BŁĘDY które bot musi prostować:
+- "Jak wygenerować certyfikat w Aplikacji Podatnika?" — w Aplikacji Podatnika generuje się TOKEN (ciąg znaków), nie certyfikat z plikami .crt/.key
+- "Gdzie kupić certyfikat do KSeF?" — do podstawowej obsługi KSeF nie trzeba nic kupować; token jest bezpłatny
+- "MF daje pliki .crt i .key" — NIE. MF wydaje token tekstowy. Pliki kluczy offline generuje program księgowy.
+
+Procedura autoryzacji programu do KSeF (ogólna, niezależnie od programu):
+1. Zaloguj się do Aplikacji Podatnika KSeF (ksef.mf.gov.pl) — przez Profil Zaufany, e-Dowód lub podpis kwalifikowany
+2. Upewnij się że złożyłeś ZAW-FA (zgłoszenie pierwszego administratora) — bez tego brak dostępu
+3. Przejdź do: Zarządzanie → Tokeny → Wygeneruj token dla swojego programu
+4. Skopiuj wygenerowany token i wklej do ustawień programu księgowego
+5. Program sam zajmie się resztą (w tym generowaniem kluczy offline jeśli potrzeba)
+
 ### UPRAWNIENIA
 - Właściciel — pełny dostęp automatycznie
 - Pracownicy — uprawnienia nadawane przez bramkę lub pełnomocnictwo UPL-1
@@ -371,8 +392,8 @@ Wielu użytkowników korzysta z Fakturowni. Gdy pytają o integrację z KSeF, od
 
 ### Jak połączyć Fakturownię z KSeF
 Są dwa tryby uwierzytelnienia:
-- Automatyczne (zalecane dla JDG z jednym programem) — Fakturownia sama generuje certyfikaty w KSeF w Twoim imieniu. Podpisujesz plik uwierzytelniający Profilem Zaufanym lub podpisem kwalifikowanym.
-- Manualne (dla osób z kilkoma firmami lub kilkoma programami) — generujesz certyfikaty samodzielnie w Aplikacji Podatnika, pobierasz 4 pliki (.crt, .key, offline.crt, offline.key) i wgrywasz do Fakturowni.
+- Automatyczne (zalecane dla JDG z jednym programem) — Fakturownia sama generuje token autoryzacyjny w KSeF w Twoim imieniu. Podpisujesz plik uwierzytelniający Profilem Zaufanym lub podpisem kwalifikowanym.
+- Manualne (dla osób z kilkoma firmami lub kilkoma programami) — generujesz token samodzielnie w Aplikacji Podatnika KSeF i wpisujesz go do Fakturowni.
 
 Ważna kolejność dla uwierzytelnienia automatycznego:
 1. Najpierw złóż ZAW-FA (zgłoszenie pierwszego administratora KSeF) — bez tego autoryzacja nie zadziała
@@ -388,14 +409,14 @@ Ważna kolejność dla uwierzytelnienia automatycznego:
 - Błąd autoryzacji po podpisaniu pliku — sprawdź czy ZAW-FA zostało przetworzone i czy nadałeś uprawnienia PRZED autoryzacją
 - "Brak uprawnień" przy wysyłce — wejdź w Aplikację Podatnika → Uprawnienia → Nadawanie uprawnień → wybierz "wystawianie faktur"
 - Autoryzacja "wisi" kilkanaście minut — to normalne, serwery KSeF mogą być obciążone; nie anuluj, poczekaj
-- Nieprawidłowe hasło do certyfikatu manualnego — certyfikat jest weryfikowany po stronie KSeF, nie Fakturowni; wygeneruj nowe certyfikaty w Aplikacji Podatnika
+- Problem z tokenem manualnym — token jest weryfikowany po stronie KSeF; wygeneruj nowy token w Aplikacji Podatnika i wpisz ponownie w Fakturowni
 - Faktury nie wysyłają się, status "W trakcie" — sprawdź status.podatki.gov.pl, może być awaria; odczekaj i ponów
 
 ### Ważne szczegóły
 - Integracja KSeF w Fakturowni jest bezpłatna dla wszystkich planów
 - KSeF DEMO i KSeF 2.0 (produkcyjny) to dwa osobne środowiska — autoryzację trzeba wykonać osobno
 - Aktywacja integracji produkcyjnej automatycznie wyłącza wersję DEMO
-- Tokeny KSeF (stara metoda uwierzytelniania) obowiązują tylko do końca 2026 r. — nową metodą są certyfikaty KSeF
+- Token KSeF to ciąg znaków (nie plik) generowany w Aplikacji Podatnika — służy do autoryzacji programu do wysyłki faktur
 - Fakturownia ma 2FA przez SMS — warto włączyć dla bezpieczeństwa (Ustawienia → konto)
 - Każda firma (JDG, spółka) ma osobne konto w KSeF — jeśli masz kilka podmiotów, każdy musisz zintegrować osobno
 
@@ -608,10 +629,8 @@ export default async function handler(req, res) {
   const isPaid = plan !== null;
 
   // Sprawdź trial sesję (jeśli nie ma płatnego planu)
-  console.log("chat.js: trialSession received:", trialSession ? trialSession.slice(0,8) + "..." : "null");
   const trialData = !isPaid ? await verifyTrialSession(trialSession, fingerprint) : null;
   const isTrial = trialData !== null;
-  console.log("chat.js: isTrial=", isTrial, "isPaid=", isPaid, "hasFullAccess=", isPaid || isTrial);
 
   // Trial — sprawdź limit wiadomości
   if (isTrial) {

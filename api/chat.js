@@ -732,16 +732,6 @@ export default async function handler(req, res) {
     ? messages
     : [messages[0], ...messages.slice(-9)];
 
-  // Ustaw nagłówki streamingu
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-
-  // Wyślij metadata (trial expiry) jako pierwszy event
-  if (isTrial && trialData?.trialExpiresAt) {
-    res.write(`data: ${JSON.stringify({ type: "meta", trialExpiresAt: trialData.trialExpiresAt })}\n\n`);
-  }
-
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -753,53 +743,26 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
         max_tokens: 720,
-        stream: true,
         system: SYSTEM_PROMPT,
         messages: trimmedMessages,
       }),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      const errData = await response.json();
-      console.error("Anthropic error:", errData);
-      res.write(`data: ${JSON.stringify({ type: "error", error: "Błąd połączenia z AI" })}\n\n`);
-      return res.end();
+      console.error("Anthropic error:", data);
+      return res.status(500).json({ error: "Błąd połączenia z AI" });
     }
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop(); // zachowaj niepełną linię
-
-      for (const line of lines) {
-        if (!line.startsWith("data: ")) continue;
-        const data = line.slice(6).trim();
-        if (data === "[DONE]") continue;
-
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed.type === "content_block_delta" && parsed.delta?.type === "text_delta") {
-            res.write(`data: ${JSON.stringify({ type: "delta", text: parsed.delta.text })}\n\n`);
-          }
-          if (parsed.type === "message_stop") {
-            res.write(`data: ${JSON.stringify({ type: "done" })}\n\n`);
-          }
-        } catch {}
-      }
-    }
-
-    return res.end();
+    const reply = data.content?.[0]?.text || "Przepraszam, wystąpił problem. Spróbuj ponownie.";
+    return res.status(200).json({
+      reply,
+      ...(isTrial && { trialExpiresAt: trialData.trialExpiresAt }),
+    });
 
   } catch (err) {
     console.error("Server error:", err);
-    res.write(`data: ${JSON.stringify({ type: "error", error: "Błąd serwera" })}\n\n`);
-    return res.end();
+    return res.status(500).json({ error: "Błąd serwera" });
   }
 }

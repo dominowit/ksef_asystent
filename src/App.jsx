@@ -578,10 +578,12 @@ export default function GlowaDoksef() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: apiMessages, userToken: userToken || null, trialSession: trialSession || null, fingerprint: fingerprint || null, hasImage: !!image }),
       });
-
-      // Obsługa błędów 403 (limity) — odpowiedź JSON nie jest streamem
+      const data = await response.json();
+      if (data.trialExpiresAt) {
+        localStorage.setItem("ksef_trial_expires", data.trialExpiresAt);
+        setTrialExpiresAt(data.trialExpiresAt);
+      }
       if (response.status === 403) {
-        const data = await response.json();
         if (data.error === "limit_reached") { setMessages(prev => [...prev, { role: "assistant", content: "paywall" }]); }
         else if (data.error === "trial_limit_reached") { setMessages(prev => [...prev, { role: "assistant", content: "trial_limit" }]); }
         else if (data.error === "upgrade_required") { setMessages(prev => [...prev, { role: "assistant", content: "Analiza faktur dostępna jest w płatnych planach." }]); setShowPaywall(true); }
@@ -589,75 +591,8 @@ export default function GlowaDoksef() {
         else setMessages(prev => [...prev, { role: "assistant", content: data.message || "Brak dostępu." }]);
         setLoading(false); return;
       }
-      if (!response.ok) {
-        setMessages(prev => [...prev, { role: "assistant", content: "Problem z połączeniem. Spróbuj ponownie." }]);
-        setLoading(false); return;
-      }
-
-      // Odbierz stream SSE
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let fullText = "";
-      const msgId = Date.now();
-
-      // Dodaj pustą wiadomość asystenta — będziemy ją aktualizować na bieżąco
-      setMessages(prev => [...prev, { role: "assistant", content: "", streamId: msgId }]);
-      setLoading(false);
-      setIsStreaming(true);
-
-      // Batching: aktualizuj UI co 30ms zamiast przy każdym tokenie
-      let pendingText = "";
-      let rafScheduled = false;
-      const flushText = () => {
-        if (!pendingText) return;
-        const snapshot = pendingText;
-        pendingText = "";
-        rafScheduled = false;
-        fullText += snapshot;
-        setMessages(prev => prev.map(m => m.streamId === msgId ? { ...m, content: fullText } : m));
-      };
-      const scheduleFlush = () => {
-        if (!rafScheduled) {
-          rafScheduled = true;
-          setTimeout(flushText, 30);
-        }
-      };
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) { flushText(); break; }
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop();
-
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const raw = line.slice(6).trim();
-          if (!raw) continue;
-          try {
-            const parsed = JSON.parse(raw);
-            if (parsed.type === "meta" && parsed.trialExpiresAt) {
-              localStorage.setItem("ksef_trial_expires", parsed.trialExpiresAt);
-              setTrialExpiresAt(parsed.trialExpiresAt);
-            }
-            if (parsed.type === "delta") {
-              pendingText += parsed.text;
-              scheduleFlush();
-            }
-            if (parsed.type === "error") {
-              flushText();
-              setMessages(prev => prev.map(m => m.streamId === msgId ? { ...m, content: parsed.error } : m));
-            }
-          } catch {}
-        }
-      }
-
-      // Usuń streamId po zakończeniu
-      setMessages(prev => prev.map(m => m.streamId === msgId ? { ...m, streamId: undefined } : m));
-      setIsStreaming(false);
-
-      // Inkrementuj licznik dopiero po udanej odpowiedzi
+      if (!response.ok) { setMessages(prev => [...prev, { role: "assistant", content: "Problem z połączeniem. Spróbuj ponownie." }]); setLoading(false); return; }
+      setMessages(prev => [...prev, { role: "assistant", content: data.reply }]);
       if (!userToken && !isTrial) setMessageCount(c => c + 1);
       if (!userToken && !isTrial) {
         const newCount = messageCount + 1;

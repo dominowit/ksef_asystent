@@ -3,7 +3,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 const FREE_LIMIT = 5;
 
 const QUICK_QUESTIONS = [
-  { text: "Od kiedy muszę używać KSeF?" },
+  { text: "Co zrobić gdy JPK odrzuca plik?" },
+  { text: "Jak oznaczyć fakturę od zagranicznego dostawcy?" },
   { text: "Mam błąd przy wysyłce faktury" },
   { text: "Jak nadać uprawnienia pracownikowi?" },
   { text: "Boję się, że coś zepsuję" },
@@ -401,6 +402,7 @@ export default function GlowaDoksef() {
   const [showSafety, setShowSafety] = useState(false);
   const [showTrialModal, setShowTrialModal] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [trialSession, setTrialSession] = useState(() => localStorage.getItem("ksef_trial_session") || null);
   const [trialEmail, setTrialEmail] = useState(() => localStorage.getItem("ksef_trial_email") || null);
   const [trialExpiresAt, setTrialExpiresAt] = useState(() => localStorage.getItem("ksef_trial_expires") || null);
@@ -576,8 +578,10 @@ export default function GlowaDoksef() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: apiMessages, userToken: userToken || null, trialSession: trialSession || null, fingerprint: fingerprint || null, hasImage: !!image }),
       });
-      const data = await response.json();
+
+      // Obsługa błędów 403 (limity) — odpowiedź JSON nie jest streamem
       if (response.status === 403) {
+        const data = await response.json();
         if (data.error === "limit_reached") { setMessages(prev => [...prev, { role: "assistant", content: "paywall" }]); }
         else if (data.error === "trial_limit_reached") { setMessages(prev => [...prev, { role: "assistant", content: "trial_limit" }]); }
         else if (data.error === "upgrade_required") { setMessages(prev => [...prev, { role: "assistant", content: "Analiza faktur dostępna jest w płatnych planach." }]); setShowPaywall(true); }
@@ -585,11 +589,58 @@ export default function GlowaDoksef() {
         else setMessages(prev => [...prev, { role: "assistant", content: data.message || "Brak dostępu." }]);
         setLoading(false); return;
       }
-      if (!response.ok) { setMessages(prev => [...prev, { role: "assistant", content: "Problem z połączeniem. Spróbuj ponownie." }]); setLoading(false); return; }
-      setMessages(prev => [...prev, { role: "assistant", content: data.reply }]);
+      if (!response.ok) {
+        setMessages(prev => [...prev, { role: "assistant", content: "Problem z połączeniem. Spróbuj ponownie." }]);
+        setLoading(false); return;
+      }
+
+      // Odbierz stream SSE
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let fullText = "";
+      const msgId = Date.now();
+
+      // Dodaj pustą wiadomość asystenta — będziemy ją aktualizować na bieżąco
+      setMessages(prev => [...prev, { role: "assistant", content: "", streamId: msgId }]);
+      setLoading(false); // ukryj typing indicator — tekst pojawia się na bieżąco
+      setIsStreaming(true);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("
+");
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const raw = line.slice(6).trim();
+          if (!raw) continue;
+          try {
+            const parsed = JSON.parse(raw);
+            if (parsed.type === "meta" && parsed.trialExpiresAt) {
+              localStorage.setItem("ksef_trial_expires", parsed.trialExpiresAt);
+              setTrialExpiresAt(parsed.trialExpiresAt);
+            }
+            if (parsed.type === "delta") {
+              fullText += parsed.text;
+              setMessages(prev => prev.map(m => m.streamId === msgId ? { ...m, content: fullText } : m));
+            }
+            if (parsed.type === "error") {
+              setMessages(prev => prev.map(m => m.streamId === msgId ? { ...m, content: parsed.error } : m));
+            }
+          } catch {}
+        }
+      }
+
+      // Usuń streamId po zakończeniu
+      setMessages(prev => prev.map(m => m.streamId === msgId ? { ...m, streamId: undefined } : m));
+      setIsStreaming(false);
+
       // Inkrementuj licznik dopiero po udanej odpowiedzi
       if (!userToken && !isTrial) setMessageCount(c => c + 1);
-      // Jeśli to była ostatnia darmowa wiadomość, pokaż paywall (tylko bez trialu)
       if (!userToken && !isTrial) {
         const newCount = messageCount + 1;
         if (newCount >= FREE_LIMIT) {
@@ -763,7 +814,7 @@ export default function GlowaDoksef() {
             </div>
           </div>
         ))}
-        {loading && (
+        {(loading || isStreaming) && !messages.some(m => m.streamId) && (
           <div style={{ display: "flex", justifyContent: "flex-start", animation: "fadeIn 0.3s ease" }}>
             <div style={{ width: 42, height: 42, borderRadius: "50%", overflow: "hidden", flexShrink: 0, marginRight: 10, boxShadow: "0 2px 8px rgba(99,102,241,0.3)" }}><img src="/avatar.png" alt="bot" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>
             <div style={{ background: "white", borderRadius: "18px 18px 18px 4px", padding: "12px 16px", boxShadow: "0 2px 12px rgba(0,0,0,0.07)" }}>

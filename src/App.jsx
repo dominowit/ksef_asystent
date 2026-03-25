@@ -603,12 +603,30 @@ export default function GlowaDoksef() {
 
       // Dodaj pustą wiadomość asystenta — będziemy ją aktualizować na bieżąco
       setMessages(prev => [...prev, { role: "assistant", content: "", streamId: msgId }]);
-      setLoading(false); // ukryj typing indicator — tekst pojawia się na bieżąco
+      setLoading(false);
       setIsStreaming(true);
+
+      // Batching: aktualizuj UI co 30ms zamiast przy każdym tokenie
+      let pendingText = "";
+      let rafScheduled = false;
+      const flushText = () => {
+        if (!pendingText) return;
+        const snapshot = pendingText;
+        pendingText = "";
+        rafScheduled = false;
+        fullText += snapshot;
+        setMessages(prev => prev.map(m => m.streamId === msgId ? { ...m, content: fullText } : m));
+      };
+      const scheduleFlush = () => {
+        if (!rafScheduled) {
+          rafScheduled = true;
+          setTimeout(flushText, 30);
+        }
+      };
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) { flushText(); break; }
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
         buffer = lines.pop();
@@ -624,10 +642,11 @@ export default function GlowaDoksef() {
               setTrialExpiresAt(parsed.trialExpiresAt);
             }
             if (parsed.type === "delta") {
-              fullText += parsed.text;
-              setMessages(prev => prev.map(m => m.streamId === msgId ? { ...m, content: fullText } : m));
+              pendingText += parsed.text;
+              scheduleFlush();
             }
             if (parsed.type === "error") {
+              flushText();
               setMessages(prev => prev.map(m => m.streamId === msgId ? { ...m, content: parsed.error } : m));
             }
           } catch {}

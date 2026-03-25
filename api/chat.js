@@ -160,7 +160,16 @@ Cztery możliwe oznaczenia w węźle KSeF struktury JPK_V7(3):
 
 **BFK (Brak Faktury KSeF)** — faktura wystawiona POZA KSeF w przypadkach dopuszczonych ustawą (B2C, okres przejściowy luty-marzec 2026, całkowita awaria KSeF). BFK jest docelowe — nie wymaga późniejszej korekty. To NIE jest kod programu — to urzędowy znacznik w strukturze JPK.
 
-**DI (Dokument Inny)** — WYŁĄCZNIE dla dokumentów, które z natury NIE są fakturami ustrukturyzowanymi: raporty kas fiskalnych (RO), dokumenty wewnętrzne (WEW), faktury zagraniczne (WNT, import usług). DI NIE jest wyjściem awaryjnym dla zwykłych faktur krajowych z problemem technicznym — użycie DI zamiast NrKSeF lub OFF dla faktury krajowej to błąd grożący kontrolą.
+**DI (Dokument Inny)** — oznaczenie w węźle KSeF struktury JPK, stosowane gdy dokument nie jest fakturą ustrukturyzowaną i nie ma numeru KSeF. DI NIE wyklucza się z oznaczeniami typu dokumentu (RO, WEW) — te dwa oznaczenia są w osobnych węzłach struktury JPK. DI NIE jest wyjściem awaryjnym dla zwykłych faktur krajowych które powinny mieć NrKSeF lub OFF.
+
+Prawidłowe kombinacje oznaczeń DI z typem dokumentu:
+- Raport z kasy fiskalnej: **RO + DI** (RO = typ dokumentu, DI = brak numeru KSeF bo RO nie jest fakturą)
+- Korekta raportu z kasy: **RO + DI** (korekta raportu kasowego to nadal RO, nie WEW)
+- Dokument wewnętrzny (import usług, korekta wewnętrzna): **WEW + DI**
+- Faktura VAT-RR od rolnika: **VAT_RR + DI**
+- Faktura offline24 bez numeru KSeF na dzień składania JPK: **DI** (samo DI, bez RO/WEW)
+
+TYPOWY BŁĄD: bot NIE może twierdzić że korekta raportu z kasy to WEW+DI — to błąd. Korekta raportu kasowego to RO+DI.
 
 Kto musi oznaczać BFK od 1 lutego 2026:
 - Firmy z obowiązkiem KSeF od 1 KWIETNIA 2026 — MUSZĄ oznaczać BFK we wszystkich fakturach sprzedaży już od 1 lutego 2026. Stanowisko MF z 3 marca 2026 r. potwierdza to wprost.
@@ -334,7 +343,7 @@ To trzy zupełnie różne pojęcia. Bot musi je rozróżniać i nigdy nie miesza
 
 **Token KSeF** — ciąg znaków (tekst) generowany bezpłatnie w Aplikacji Podatnika KSeF (ksef.mf.gov.pl). Służy do autoryzacji programu księgowego do wysyłki i odbioru faktur. Generuje się go w: Aplikacja Podatnika → Zarządzanie → Tokeny → Wygeneruj token. Token to NIE są pliki .crt ani .key — to zwykły ciąg liter i cyfr który wklejasz do programu.
 
-**Certyfikaty KSeF (zestawy kluczy offline)** — pliki generowane przez PROGRAM KSIĘGOWY (nie przez MF), potrzebne wyłącznie do trybu offline24 i generowania kodów QR na fakturach offline. Klucz prywatny (.key) ZAWSZE generuje użytkownik lub program — nigdy serwer rządowy. Większość programów (Fakturownia, Comarch, WAPRO) generuje te pliki automatycznie po podpięciu tokena. Użytkownik zwykle nie musi się tym zajmować ręcznie.
+**Klucze offline KSeF (zestawy kluczy do kodów QR)** — pliki potrzebne wyłącznie do trybu offline24 i generowania kodów QR na fakturach offline. Klucz prywatny ZAWSZE generuje użytkownik lub program — nigdy serwer rządowy. Większość programów (Fakturownia, Comarch, WAPRO) generuje te klucze automatycznie po podpięciu tokena — użytkownik zwykle nie musi się tym zajmować ręcznie. Uwaga: programy księgowe generują klucze do kodów QR (tryb offline), natomiast pliki .crt/.key kojarzące się z podpisem kwalifikowanym to osobna kwestia — nie należy ich mylić.
 
 **Pieczęć elektroniczna** — komercyjny produkt kupowany u dostawców zaufania (Certum, PWPW, Asseco). Kosztuje kilkaset złotych rocznie. Służy do podpisywania dokumentów elektronicznych. NIE jest wymagana do KSeF — można korzystać z KSeF bez pieczęci elektronicznej.
 
